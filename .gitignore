@@ -1,0 +1,10 @@
+obj
+bin
+Build/Build.rsp
+*.suo
+*.user
+.vs
+*.DotSettings
+appsettings*.json
+.idea
+launchSettings.json
