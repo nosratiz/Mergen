@@ -13,7 +13,7 @@ namespace Mergen.Core
 {
     public static class DependencyManager
     {
-        public static void RegisterToolgramServices(this IServiceCollection services, IConfiguration configuration,
+        public static void RegisterMergenServices(this IServiceCollection services, IConfiguration configuration,
             bool isDevelopment)
         {
             services.RegisterData(configuration);

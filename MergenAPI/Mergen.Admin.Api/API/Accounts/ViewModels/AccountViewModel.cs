@@ -38,6 +38,8 @@ namespace Mergen.Admin.Api.API.Accounts.ViewModels
             model.StatusNote = account.StatusNote;
             model.IsEmailVerified = account.IsEmailVerified;
             model.IsPhoneNumberVerified = account.IsPhoneNumberVerified;
+            model.CoverImageId = account.CoverImageId;
+            model.AvatarImageId = account.AvatarImageId;
             return model;
         }
 
