@@ -1,0 +1,9 @@
+# Top-most EditorConfig file
+root = true
+
+# Tab indentation
+[*]
+indent_style = space
+end_of_line = crlf
+charset = utf-8
+tab_width = 4

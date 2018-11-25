@@ -1,0 +1,73 @@
+using System.Transactions;
+using Mergen.Core.Data;
+using Mergen.Core.Managers;
+using Mergen.Core.Options;
+using Mergen.Core.QueryProcessing;
+using Mergen.Core.Services;
+using Mergen.Core.Services.EmailSenders;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Mergen.Core
+{
+    public static class DependencyManager
+    {
+        public static void RegisterToolgramServices(this IServiceCollection services, IConfiguration configuration,
+            bool isDevelopment)
+        {
+            services.RegisterData(configuration);
+            services.RegisterManagers();
+            services.RegisterQueryProcessing();
+
+            services.ConfigOptions(configuration);
+
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IEmailSender, GmailEmailSender>();
+            services.AddSingleton<IFileService, FileService>();
+        }
+
+        private static void ConfigureLocalization(this IServiceCollection services)
+        {
+        }
+
+        private static void RegisterData(this IServiceCollection services, IConfiguration configuration)
+        {
+            if (bool.TryParse(configuration["Data:InMemory"], out var inMemory) && inMemory)
+                services.AddEntityFrameworkInMemoryDatabase()
+                    .AddDbContext<DataContext>(options => options.UseInMemoryDatabase("Mergen"));
+            else
+                services.AddEntityFrameworkSqlServer().AddDbContext<DataContext>(options =>
+                    options.UseSqlServer(configuration.GetConnectionString("Mergen")));
+
+            services.AddSingleton<DbContextFactory>();
+        }
+
+        private static void RegisterManagers(this IServiceCollection services)
+        {
+            services.AddSingleton<AccountManager>();
+            services.AddSingleton<SessionManager>();
+            services.AddSingleton<FileManager>();
+            services.AddSingleton<CategoryManager>();
+        }
+
+        private static void ConfigOptions(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<GmailEmailSenderOptions>(configuration.GetSection("MailSenderOptions")
+                .GetSection("Gmail"));
+            services.Configure<EmailVerificationOptions>(configuration.GetSection("EmailVerificationOptions"));
+            services.Configure<ResetPasswordOptions>(configuration.GetSection("ResetPasswordOptions"));
+            services.Configure<OnlinePaymentOptions>(configuration.GetSection("OnlinePayment"));
+            services.Configure<FinancialOptions>(configuration.GetSection("Financial"));
+            services.Configure<FileOptions>(configuration.GetSection("File"));
+            services.Configure<BaseUrlsOptions>(configuration.GetSection("BaseUrls"));
+        }
+
+        private static void RegisterQueryProcessing(this IServiceCollection services)
+        {
+            services.AddSingleton<QueryProcessor>();
+            services.AddSingleton<PropertyCache>();
+            services.AddSingleton<InputProcessor>();
+        }
+    }
+}
