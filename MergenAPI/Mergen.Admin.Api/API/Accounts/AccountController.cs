@@ -155,7 +155,7 @@ namespace Mergen.Admin.Api.API.Accounts
         [HttpGet]
         [Route("accounts")]
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<AccountViewModel>>>> GetAccounts(
-            [FromQuery] string test, QueryInputModel<AccountFilterInputModel> inputModel,
+            QueryInputModel<AccountFilterInputModel> inputModel,
             CancellationToken cancellationToken)
         {
             var queryResult = await _accountManager.GetAllAsync(inputModel, cancellationToken);
@@ -170,14 +170,14 @@ namespace Mergen.Admin.Api.API.Accounts
         {
             var account = await _accountManager.GetAsync(int.Parse(accountId), cancellationToken);
             if (account == null)
-                return BadRequest("account_notfound", "حساب کاربری پیدا نشد");
+                return BadRequest("account_notfound", "Account not found");
 
             if (account.EmailVerificationToken != inputModel.Token)
-                return BadRequest("invalid_token", "لینک اشتباه است");
+                return BadRequest("invalid_token", "Verification token is not valid.");
 
             if (account.EmailVerificationTokenGenerationTime?.Add(_emailVerificationOptions.ExpiresAfter) <
                 DateTime.UtcNow)
-                return BadRequest("invalid_token", "لینک منقضی شده است");
+                return BadRequest("invalid_token", "Verification link is expired.");
 
             account.IsEmailVerified = true;
             await _accountManager.SaveAsync(account, cancellationToken);
@@ -193,11 +193,11 @@ namespace Mergen.Admin.Api.API.Accounts
         {
             var existingAccount = await _accountManager.FindByResetPasswordTokenAsync(token, cancellationToken);
             if (existingAccount == null)
-                return BadRequest("invalid_code", "کد معتبر نیست.");
+                return BadRequest("invalid_code", "Link is not valid.");
 
             if (existingAccount.ResetPasswordTokenGenerationTime?.Add(_resetPasswordOptions.ExpiresAfter) <
                 DateTime.UtcNow)
-                return BadRequest("expired_code", "کد منقضی شده است.");
+                return BadRequest("expired_code", "Link is expired.");
 
             return OkData(new ResetPasswordRequestViewModel
             {
@@ -213,7 +213,7 @@ namespace Mergen.Admin.Api.API.Accounts
         {
             var existingAccount = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
             if (existingAccount == null)
-                return BadRequest("account_not_found", "حساب کاربری با این ایمیل پیدا نشد.");
+                return BadRequest("account_not_found", "Account not found.");
 
             await _emailService.SendResetPasswordLink(existingAccount, cancellationToken);
 
@@ -231,13 +231,13 @@ namespace Mergen.Admin.Api.API.Accounts
         {
             var existingAccount = await _accountManager.GetAsync(int.Parse(inputModel.AccountId), cancellationToken);
             if (existingAccount == null)
-                return BadRequest("invalid_account_id", "کاربر پیدا نشد.");
+                return BadRequest("invalid_account_id", "Account not found.");
 
             if (existingAccount.ResetPasswordToken != inputModel.Token)
-                return BadRequest("invalid_code", "کد معتبر نیست.");
+                return BadRequest("invalid_code", "Link is not valid.");
 
             if (existingAccount.ResetPasswordTokenGenerationTime?.AddHours(48) < DateTime.UtcNow)
-                return BadRequest("expired_code", "کد منقضی شده است.");
+                return BadRequest("expired_code", "Link is expired.");
 
             existingAccount.PasswordHash = PasswordHash.CreateHash(inputModel.NewPassword);
             existingAccount.ResetPasswordToken = null;

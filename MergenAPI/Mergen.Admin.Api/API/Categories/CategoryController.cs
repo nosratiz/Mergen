@@ -26,7 +26,7 @@ namespace Mergen.Admin.Api.API.Categories
         public async Task<ActionResult<ApiResultViewModel<CategoryViewModel>>> GetAllAsync([FromQuery]QueryInputModel<CategoryFilterInputModel> queryInputModel, CancellationToken cancellationToken)
         {
             var data = await _categoryManager.GetAllAsync(queryInputModel, cancellationToken);
-            return OkData(data);
+            return OkData(CategoryViewModel.MapAll(data.Data), new DataMetaViewModel(data.TotalCount));
         }
 
         [HttpGet]

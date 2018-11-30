@@ -4,18 +4,6 @@ namespace Mergen.Core.Options
     {
         public string BaseStoragePath { get; set; }
 
-        public string AvatarsFolderName { get; set; }
-
-        public string FilesFolderName { get; set; }
-
-        public string ProjectLogosFolderName { get; set; }
-
-        public string ProjectCoverImagesFolderName { get; set; }
-
-        public string ChannelLogosFolderName { get; set; }
-
-        public string EventsFolderName { get; set; }
-
         public long MaximumFileSize { get; set; }
 
         public long MaximumAvatarSize { get; set; }

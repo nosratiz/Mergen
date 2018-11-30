@@ -6,6 +6,12 @@
     <AspNetCoreHostingModel>inprocess</AspNetCoreHostingModel>
   </PropertyGroup>
 
+    <ItemGroup>
+        <Content Remove="appsettings*.json" />
+        <Content Remove="logsettings*.json" />
+        <Content Remove="seeddata.json" />
+    </ItemGroup>
+
   <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
@@ -20,6 +26,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="automapper" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0-preview2-35157" PrivateAssets="All" />
     <PackageReference Include="nodatime" Version="2.4.2" />

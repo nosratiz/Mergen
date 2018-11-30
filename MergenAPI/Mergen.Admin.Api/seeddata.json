@@ -1,0 +1,38 @@
+{
+  "SeedData": {
+    "Accounts": [
+      {
+        "PasswordHash": "50000:aQIUz+MuvQovwtt6WhSQKGUuQO1Xss3G:njGYs8i9k8lIFCp50DPuYasBtABeQE41",
+        "Email": "shayanaraghi@live.com",
+        "NormalizedEmail": "SHAYANARAGHI@LIVE.COM",
+        "EmailVerificationToken": "K9P9DEVEDYEDABXWFAE5XEGB4H6HCAZDDDNWLRUTB6U25MERMU9UGM9CTSX8NWD4EHX2L3NBLFZNY9NEPMHP47TY9SFMMKAUEZE7VYVFSD88LEHVN2SM59T444GB67W8",
+        "IsEmailVerified": true,
+        "EmailVerificationTokenGenerationTime": "2018-10-11T11:36:34.1860358+03:30",
+        "PhoneNumber": "123",
+        "PhoneNumberVerificationToken": null,
+        "PhoneNumberVerificationTokenGenerationTime": null,
+        "IsPhoneNumberVerified": false,
+        "Roles": null,
+        "Permissions": null,
+        "IsActive": false,
+        "ResetPasswordToken": null,
+        "ResetPasswordTokenGenerationTime": null,
+        "FirstName": "Shayan",
+        "LastName": "Araghi",
+        "Nickname": "shayan_nickname",
+        "GenderId": 1,
+        "BirthDate": "1900-01-01",
+        "StatusId": 1,
+        "StatusNotes": "notes...",
+        "Timezone": "Asia/Tehran",
+        "Id": 1001
+      }
+    ],
+    "AccountRoles": [
+        {
+          "AccountId": 1001,
+          "RoleId": 100 
+        }
+    ] 
+  }
+}

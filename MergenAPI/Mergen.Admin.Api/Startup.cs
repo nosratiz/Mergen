@@ -133,8 +133,9 @@ namespace Mergen.Admin.Api
             app.UseRequestLocalization(options =>
             {
                 options.AddSupportedCultures("en");
-                options.AddSupportedUICultures("en", "fa");
-                options.DefaultRequestCulture = new RequestCulture("en", "fa");
+                options.AddSupportedUICultures("en");
+                options.DefaultRequestCulture = new RequestCulture("en", "en");
+                options.RequestCultureProviders = null;
                 /*options.RequestCultureProviders = new List<IRequestCultureProvider>
                 {
                     new CustomRequestCultureProvider(context => Task.FromResult(new ProviderCultureResult("fa", "fa")))
@@ -148,6 +149,8 @@ namespace Mergen.Admin.Api
             app.UseMiddleware<PrincipalWrapperMiddleware>();
             app.UseAuthorization();
             app.UseMvc();
+
+            AutoMapper.Mapper.Initialize(config => { config.CreateMissingTypeMaps = true; });
         }
     }
 }

@@ -2,7 +2,7 @@ namespace Mergen.Admin.Api.Security.AuthorizationSystem.PermissionParameterCheck
 {
     public class AccountIdPermissionParameterChecker : PermissionParameterChecker<int>
     {
-        public AccountIdPermissionParameterChecker(int value) : base("AccountId", value)
+        public AccountIdPermissionParameterChecker(int value) : base("CreatorAccountId", value)
         {
         }
     }

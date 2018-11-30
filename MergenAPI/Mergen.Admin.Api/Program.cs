@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -19,6 +19,10 @@ namespace Mergen.Admin.Api
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration(config =>
+                    {
+                        config.AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "seeddata.json"), true, false);
+                    })
                 .UseStartup<Startup>();
     }
 }

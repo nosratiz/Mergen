@@ -8,6 +8,7 @@ using Mergen.Core.Entities;
 using Mergen.Core.Helpers;
 using Mergen.Core.Managers.Base;
 using Mergen.Core.QueryProcessing;
+using Microsoft.EntityFrameworkCore;
 
 namespace Mergen.Core.Managers
 {
@@ -46,6 +47,14 @@ namespace Mergen.Core.Managers
                 }
 
                 await dbc.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        public async Task<IEnumerable<long>> GetRolesAsync(Account account, CancellationToken cancellationToken = default)
+        {
+            using (var dbc = CreateDbContext())
+            {
+                return await dbc.AccountRoles.Where(q => q.AccountId == account.Id).Select(q => q.RoleId).ToListAsync(cancellationToken: cancellationToken);
             }
         }
     }

@@ -1,42 +1,49 @@
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
+using FileOptions = Mergen.Core.Options.FileOptions;
 
 namespace Mergen.Core.Services
 {
     public class FileService : IFileService
     {
-        public async Task SaveFile(Stream file, string path, string fileName, CancellationToken cancellationToken)
+        private readonly FileOptions _options;
+
+        public FileService(IOptions<FileOptions> options)
         {
-            Directory.CreateDirectory(path);
-            var filePath = Path.Combine(path, fileName);
+            _options = options.Value;
+            Directory.CreateDirectory(_options.BaseStoragePath);
+        }
+
+        public async Task<string> SaveFileAsync(Stream file, CancellationToken cancellationToken)
+        {
+            var fileName = Guid.NewGuid().ToString("N");
+            var filePath = Path.Combine(_options.BaseStoragePath, fileName);
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream, 81920, cancellationToken);
             }
+
+            return fileName;
         }
 
-        public Stream GetFile(string path, string fileName)
+        public Stream GetFile(string id)
         {
-            var filePath = Path.Combine(path, fileName);
+            var filePath = Path.Combine(_options.BaseStoragePath, id);
             return File.OpenRead(filePath);
         }
 
-        public byte[] GetFileAsArrayOfBytes(string path, string fileName)
+        public void DeleteFile(string id)
         {
-            var filePath = Path.Combine(path, fileName);
-            return File.ReadAllBytes(filePath);
-        }
-
-        public void DeleteFile(string path, string fileName)
-        {
-            var filePath = Path.Combine(path, fileName);
+            var filePath = Path.Combine(_options.BaseStoragePath, id);
             File.Delete(filePath);
         }
 
-        public long GetFileSize(string path, string fileName)
+        public long GetFileSize(string id)
         {
-            return new FileInfo(Path.Combine(path, fileName)).Length;
+            return new FileInfo(Path.Combine(_options.BaseStoragePath, id)).Length;
         }
     }
 }

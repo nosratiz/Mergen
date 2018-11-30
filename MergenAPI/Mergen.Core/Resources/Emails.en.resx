@@ -117,99 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Invitation.Body" xml:space="preserve">
-    <value>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;{0}&lt;/title&gt;
-&lt;/head&gt;
-&lt;body style="direction:rtl;background-color: #fafafa;color: #666;padding: 50px 0 300px 0;text-align: center;font-family:  tahoma; font-size: 14px;"&gt;
-    &lt;p style="text-align: center;" dir="rtl"&gt;&lt;/p&gt;
-&lt;p style="text-align: center;" dir="rtl"&gt;&lt;/p&gt;
-&lt;div style="margin: 0 auto; width: 600px; background-color: #fff; border: 1px solid #eee; padding: 30px 20px 10px 20px; -moz-border-radius: 3px; border-radius: 3px;" dir="rtl"&gt;
-&lt;div style="text-align: center;"&gt;
-&lt;h1 style="font-weight: lighter; font-size: 22px; text-transform: uppercase; color: #808080; letter-spacing: -1px;"&gt;{0}&lt;/h1&gt;
-&lt;/div&gt;
-&lt;div style="text-align: center;"&gt;
-&lt;p style="font-size: 16px; line-height: 25px; color: #aaaaaa; margin: 20px 0;"&gt;&lt;br /&gt; {1} شما را به پروژه {2} دعوت کرده است. &lt;br /&gt; با کلیک بر روی لینک زیر شما به صفحه&amp;zwnj;ی پذیرش دعوت نامه منتقل خواهید شد &lt;br /&gt;(توجه: لینک دریافتی به مدت ۴۸ ساعت معتبر خواهد بود)&lt;/p&gt;
-&lt;br /&gt; &lt;a href="{3}" style="text-decoration: none !important; color: #ffffff; background-color: #179cde; padding: 10px 20px; -moz-border-radius: 3px; border-radius: 3px;"&gt;پذیرش دعوت نامه&lt;/a&gt;&lt;/div&gt;
-&lt;div class="footer"&gt;
-&lt;p style="font-size: 12px; line-height: 25px; margin: 40px 0px 0px; color: #cccccc !important; text-align: center;"&gt;&amp;copy; تمامی حقوق محفوظ است. تولگرام &amp;reg;&lt;/p&gt;
-&lt;/div&gt;
-&lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;</value>
-  </data>
-  <data name="Invitation.Subject" xml:space="preserve">
-    <value>تولگرام - دعوت به پروژه</value>
-  </data>
   <data name="ResetPassword.Body" xml:space="preserve">
-    <value>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;{0}&lt;/title&gt;
-&lt;/head&gt;
-&lt;body style="direction:rtl;background-color: #fafafa;color: #666;padding: 50px 0 300px 0;text-align: center;font-family:  tahoma; font-size: 14px;"&gt;
-    &lt;div style="margin: 0 auto;width: 600px;background-color: #fff;border: 1px solid #eee;padding: 30px 20px 10px 20px;-moz-border-radius: 3px;border-radius: 3px;"&gt;
-        &lt;div&gt;
-            &lt;h1 style="font-weight: lighter;font-size: 22px;text-transform: uppercase;color: #808080;letter-spacing: -1px;"&gt;
-                {0}
-            &lt;/h1&gt;
-        &lt;/div&gt;
-        &lt;div&gt;
-            &lt;p style="font-size: 16px; line-height: 25px; color: #aaaaaa; margin: 20px 0;"&gt;
-                کاربر گرامی
-                &lt;br&gt;
-                با کلیک بر روی لینک زیر، شما به صفحه‌ی موقتی تغییر کلمه‌ی عبور‌ی خود هدایت خواهید شد.
-                &lt;br /&gt;(توجه: لینک دریافتی به مدت ۴۸ ساعت معتبر خواهد بود)
-            &lt;/p&gt;
-            &lt;br /&gt;
-            &lt;a href="{1}" style="text-decoration: none !important; color: #ffffff;background-color: #179cde;padding: 10px 20px;-moz-border-radius: 3px;border-radius: 3px;"&gt;تغییر کلمه‌ی عبور&lt;/a&gt;
-        &lt;/div&gt;
-        &lt;div class="footer"&gt;
-            &lt;p style="font-size: 12px;line-height: 25px;color: #cccccc !important;margin: 40px 0 0 0;"&gt;
-                © تمامی حقوق محفوظ است. تولگرام ®
-            &lt;/p&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;</value>
+    <value>Click the link to reset your password {0}</value>
   </data>
   <data name="ResetPassword.Subject" xml:space="preserve">
-    <value>تغییر کلمه‌ی عبور</value>
+    <value>Mergen - Change password</value>
   </data>
   <data name="Verification.Body" xml:space="preserve">
-    <value>&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-    &lt;title&gt;{0}&lt;/title&gt;
-&lt;/head&gt;
-&lt;body style="direction:rtl;background-color: #fafafa;color: #666;padding: 50px 0 300px 0;text-align: center;font-family:  tahoma; font-size: 14px;"&gt;
-    &lt;div style="margin: 0 auto;width: 600px;background-color: #fff;border: 1px solid #eee;padding: 30px 20px 10px 20px;-moz-border-radius: 3px;border-radius: 3px;"&gt;
-        &lt;div&gt;
-            &lt;h1 style="font-weight: lighter;font-size: 22px;text-transform: uppercase;color: #808080;letter-spacing: -1px;"&gt;
-                {0}
-            &lt;/h1&gt;
-        &lt;/div&gt;
-        &lt;div&gt;
-            &lt;p style="font-size: 14px;line-height: 25px;color: #aaaaaa;margin: 20px 0;"&gt;
-                به تولگرام خوش آمدید.&lt;br&gt;
-                جهت تایید آدرس ایمیل خود و فعال شدن شناسه‌ی کاربری خود بر روی لینک زیر کلیک کنید.
-                &lt;br /&gt;(توجه: لینک دریافتی به مدت ۴۸ ساعت معتبر خواهد بود)
-            &lt;/p&gt;
-            &lt;br /&gt;
-            &lt;a href="{1}" style="text-decoration: none !important; color: #ffffff;background-color: #179cde;padding: 10px 20px;-moz-border-radius: 3px;border-radius: 3px;"&gt;فعال‌سازی آدرس ایمیل&lt;/a&gt;
-        &lt;/div&gt;
-        &lt;div class="footer"&gt;
-            &lt;p style="font-size: 12px;line-height: 25px;color: #cccccc !important;margin: 40px 0 0 0;"&gt;
-                © تمامی حقوق محفوظ است. تولگرام ®
-            &lt;/p&gt;
-        &lt;/div&gt;
-    &lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;</value>
+    <value>Click the link to verify your account in mergen {0}</value>
   </data>
   <data name="Verification.Subject" xml:space="preserve">
-    <value>تولگرام - تایید آدرس ایمیل</value>
+    <value>Mergen - Verify your email address</value>
   </data>
 </root>

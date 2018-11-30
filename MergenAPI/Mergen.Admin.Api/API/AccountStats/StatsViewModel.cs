@@ -1,11 +1,14 @@
-using System;
-using Mergen.Core.Entities.Base;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using AutoMapper;
+using Mergen.Core.Entities;
 
-namespace Mergen.Core.Entities
+namespace Mergen.Admin.Api.API.AccountStats
 {
-    public class AccountStatsSummary : Entity
+    public class StatsViewModel
     {
-        public long AccountId { get; set; }
+        public string AccountId { get; set; }
         public int Level { get; set; }
         public int Sky { get; set; }
         public int Rank { get; set; }
@@ -26,5 +29,15 @@ namespace Mergen.Core.Entities
         public decimal GiftedCoins { get; set; }
         public int UnlockedAchievements { get; set; }
         public string Top3Skills { get; set; }
+
+        public static StatsViewModel Map(AccountStatsSummary accountStatsSummary)
+        {
+            return Mapper.Map<StatsViewModel>(accountStatsSummary);
+        }
+
+        public static IEnumerable<StatsViewModel> MapAll(IEnumerable<AccountStatsSummary> accountStatsSummaries)
+        {
+            return accountStatsSummaries.Select(Map);
+        }
     }
 }

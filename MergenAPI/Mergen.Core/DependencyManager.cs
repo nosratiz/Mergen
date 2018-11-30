@@ -1,4 +1,3 @@
-using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Managers;
 using Mergen.Core.Options;
@@ -45,10 +44,15 @@ namespace Mergen.Core
 
         private static void RegisterManagers(this IServiceCollection services)
         {
+            services.AddSingleton<AccountInvitationManager>();
             services.AddSingleton<AccountManager>();
-            services.AddSingleton<SessionManager>();
-            services.AddSingleton<FileManager>();
+            services.AddSingleton<AchievementManager>();
             services.AddSingleton<CategoryManager>();
+            services.AddSingleton<FileManager>();
+            services.AddSingleton<QuestionManager>();
+            services.AddSingleton<SessionManager>();
+            services.AddSingleton<ShopItemManager>();
+            services.AddSingleton<StatsManager>();
         }
 
         private static void ConfigOptions(this IServiceCollection services, IConfiguration configuration)

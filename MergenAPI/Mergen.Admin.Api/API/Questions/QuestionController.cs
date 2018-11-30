@@ -26,7 +26,7 @@ namespace Mergen.Admin.Api.API.Questions
         public async Task<ActionResult<ApiResultViewModel<QuestionViewModel>>> GetAllAsync([FromQuery]QueryInputModel<QuestionFilterInputModel> queryInputModel, CancellationToken cancellationToken)
         {
             var data = await _questionManager.GetAllAsync(queryInputModel, cancellationToken);
-            return OkData(data);
+            return OkData(QuestionViewModel.MapAll(data.Data), new DataMetaViewModel(data.TotalCount));
         }
 
         [HttpGet]

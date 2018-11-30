@@ -19,9 +19,9 @@ namespace Mergen.Admin.Api.API
             return Ok(ApiResultViewModel<TData>.FromData(data, meta));
         }
 
-        public OkObjectResult OkData<TData>(QueryResult<TData> queryResult)
+        public OkObjectResult OkData<TData>(TData data, int? totalCount)
         {
-            return Ok(ApiResultViewModel<TData>.FromData(queryResult.Data, new DataMetaViewModel(queryResult.TotalCount)));
+            return Ok(ApiResultViewModel<TData>.FromData(data, totalCount));
         }
 
         public CreatedResult CreatedData<TData>(TData data, object meta = null)

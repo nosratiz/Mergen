@@ -53,7 +53,7 @@ namespace Mergen.Core.Services
             var url = string.Format(_emailVerificationOptions.LinkFormat, account.Id, account.EmailVerificationToken);
             var title = account.Email;
             await SendEmailAsync(account.Email, _stringLocalizer["Verification.Subject"],
-                string.Format(_stringLocalizer["Verification.Body"], title, url), cancellationToken);
+                string.Format(_stringLocalizer["Verification.Body"], url), cancellationToken);
         }
 
         public async Task SendResetPasswordLink(Account account, CancellationToken cancellationToken)
@@ -70,7 +70,7 @@ namespace Mergen.Core.Services
             var url = string.Format(_resetPasswordOptions.LinkFormat, account.Id, account.ResetPasswordToken);
             var title = account.Email;
             await SendEmailAsync(account.Email, _stringLocalizer["ResetPassword.Subject"],
-                string.Format(_stringLocalizer["ResetPassword.Body"], title, url), cancellationToken);
+                string.Format(_stringLocalizer["ResetPassword.Body"], url), cancellationToken);
         }
     }
 }

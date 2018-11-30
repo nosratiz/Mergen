@@ -1,5 +1,6 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,13 +40,19 @@ namespace Mergen.Admin.Api.API.Sessions
         {
             var account = await _accountManager.FindByEmailAsync(model.Email, cancellationToken);
             if (account == null)
-                return BadRequest("invalid_username_or_password", "نام کاربری یا کلمه‌عبور اشتباه است");
+                return BadRequest("invalid_username_or_password", "Invalid Username or Password!");
 
             if (!PasswordHash.ValidatePassword(model.Password, account.PasswordHash))
-                return BadRequest("invalid_username_or_password", "نام کاربری یا کلمه‌عبور اشتباه است");
+                return BadRequest("invalid_username_or_password", "Invalid Username or Password!");
+
+            var roles = await _accountManager.GetRolesAsync(account, cancellationToken);
+            if (!roles.Contains(RoleIds.Admin))
+            {
+                return Forbidden();
+            }
 
             if (!account.IsEmailVerified)
-                return BadRequest("email_not_verified", "ایمیل تایید نشده است");
+                return BadRequest("email_not_verified", "Please verify your email to log in.");
 
             var token = _tokenGenerator.GenerateToken(TimeSpan.FromDays(365),
                 new Claim(JwtRegisteredClaimNames.Jti, account.Id.ToString()),

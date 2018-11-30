@@ -4,12 +4,12 @@ namespace Mergen.Admin.Api.Security.AuthorizationSystem.PermissionParameterCheck
 {
     public class AccountIdQueryPermissionParameterChecker : QueryPermissionChecker
     {
-        public AccountIdQueryPermissionParameterChecker(QueryInputModel value) : base("AccountId", value)
+        public AccountIdQueryPermissionParameterChecker(QueryInputModel value) : base("CreatorAccountId", value)
         {
         }
 
         public AccountIdQueryPermissionParameterChecker(QueryInputModel value, string queryFieldName) : base(
-            "AccountId", value, queryFieldName)
+            "CreatorAccountId", value, queryFieldName)
         {
         }
     }
