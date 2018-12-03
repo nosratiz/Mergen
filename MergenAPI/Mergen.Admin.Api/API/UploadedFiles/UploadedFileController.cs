@@ -26,7 +26,7 @@ namespace Mergen.Admin.Api.API.UploadedFiles
 
         [HttpPost]
         [Route("files")]
-        public async Task<ActionResult<ApiResultViewModel<UploadedFileViewModel>>> UploadFile(FileInputModel inputModel,
+        public async Task<ActionResult<ApiResultViewModel<UploadedFileViewModel>>> UploadFile([FromForm]FileInputModel inputModel,
             CancellationToken cancellationToken)
         {
             string fileId;
