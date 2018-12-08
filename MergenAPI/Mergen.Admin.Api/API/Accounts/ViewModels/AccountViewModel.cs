@@ -27,6 +27,7 @@ namespace Mergen.Admin.Api.API.Accounts.ViewModels
         public static AccountViewModel Map(Account account)
         {
             var model = new AccountViewModel();
+            model.Id = account.Id.ToString();
             model.Email = account.Email;
             model.PhoneNumber = account.PhoneNumber;
             model.FirstName = account.FirstName;
@@ -40,6 +41,7 @@ namespace Mergen.Admin.Api.API.Accounts.ViewModels
             model.IsPhoneNumberVerified = account.IsPhoneNumberVerified;
             model.CoverImageId = account.CoverImageId;
             model.AvatarImageId = account.AvatarImageId;
+            model.Timezone = account.Timezone;
             return model;
         }
 
