@@ -35,7 +35,8 @@ namespace Mergen.Admin.Api.API.ShopItems
                 ImageFileId = inputModel.ImageFileId,
                 UnlockLevel = inputModel.UnlockLevel,
                 UnlockSky = inputModel.UnlockSky,
-                AvatarCategoryId = inputModel.AvatarCategoryId?.ToInt()
+                AvatarCategoryId = inputModel.AvatarCategoryId?.ToInt(),
+                Description = inputModel.Description
             };
 
             shopItem = await _shopItemManager.SaveAsync(shopItem, cancellationToken);
@@ -61,6 +62,7 @@ namespace Mergen.Admin.Api.API.ShopItems
             shopItem.UnlockLevel = inputModel.UnlockLevel;
             shopItem.UnlockSky = inputModel.UnlockSky;
             shopItem.AvatarCategoryId = inputModel.AvatarCategoryId?.ToInt();
+            shopItem.Description = inputModel.Description;
 
             shopItem = await _shopItemManager.SaveAsync(shopItem, cancellationToken);
 

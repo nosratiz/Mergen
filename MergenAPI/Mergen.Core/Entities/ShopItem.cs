@@ -13,5 +13,6 @@ namespace Mergen.Core.Entities
         public int? UnlockLevel { get; set; }
         public int? UnlockSky { get; set; }
         public int StatusId { get; set; }
+        public string Description { get; set; }
     }
 }

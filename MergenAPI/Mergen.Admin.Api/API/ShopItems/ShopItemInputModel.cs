@@ -1,4 +1,4 @@
-﻿namespace Mergen.Admin.Api.API.ShopItems
+namespace Mergen.Admin.Api.API.ShopItems
 {
     public class ShopItemInputModel
     {
@@ -11,5 +11,6 @@
         public int? UnlockLevel { get; set; }
         public int? UnlockSky { get; set; }
         public string StatusId { get; set; }
+        public string Description { get; set; }
     }
 }

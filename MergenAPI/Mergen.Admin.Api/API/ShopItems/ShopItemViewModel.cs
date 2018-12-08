@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Mergen.Admin.Api.ViewModels;
 using Mergen.Core.Entities;
@@ -16,6 +16,7 @@ namespace Mergen.Admin.Api.API.ShopItems
         public int? UnlockLevel { get; set; }
         public int? UnlockSky { get; set; }
         public string StatusId { get; set; }
+        public string Description { get; set; }
 
         public static ShopItemViewModel Map(ShopItem shopItem)
         {
