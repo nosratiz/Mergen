@@ -98,7 +98,7 @@ namespace Mergen.Core.Managers.Base
             }
         }
 
-        public async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
+        public virtual async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             using (var dbc = CreateDbContext())
             {

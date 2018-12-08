@@ -35,7 +35,7 @@ namespace Mergen.Admin.Api.API.Questions
             CancellationToken cancellationToken)
         {
             var data = await _questionManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
-            return OkData(data);
+            return OkData(QuestionViewModel.Map(data));
         }
 
         [HttpPost]
@@ -51,19 +51,24 @@ namespace Mergen.Admin.Api.API.Questions
                 Answer3 = inputModel.Answer3,
                 Answer4 = inputModel.Answer4,
                 CorrectAnswerNumber = inputModel.CorrectAnswerNumber,
-                Difficulty = inputModel.Difficulty
+                Difficulty = inputModel.Difficulty,
             };
+
+            if (inputModel.CategoryIds != null && inputModel.CategoryIds.Any())
+                item.CategoryIdsCache = string.Join(",", inputModel.CategoryIds);
 
             using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 item = await _questionManager.SaveAsync(item, cancellationToken);
-                await _questionManager.UpdateQuestionCategories(item,
-                    inputModel.CategoryIds.Select(cid => cid.ToLong()), cancellationToken);
+
+                if (inputModel.CategoryIds != null)
+                    await _questionManager.UpdateQuestionCategories(item,
+                        inputModel.CategoryIds.Select(cid => cid.ToLong()), cancellationToken);
 
                 transaction.Complete();
             }
 
-            return OkData(item);
+            return OkData(QuestionViewModel.Map(item));
         }
 
         [HttpPut]
@@ -80,30 +85,32 @@ namespace Mergen.Admin.Api.API.Questions
             item.Answer4 = inputModel.Answer4;
             item.CorrectAnswerNumber = inputModel.CorrectAnswerNumber;
             item.Difficulty = inputModel.Difficulty;
+            item.CategoryIdsCache = string.Join(",", inputModel.CategoryIds);
 
             using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 item = await _questionManager.SaveAsync(item, cancellationToken);
+
                 await _questionManager.UpdateQuestionCategories(item,
-                    inputModel.CategoryIds.Select(cid => cid.ToLong()), cancellationToken);
+                    inputModel.CategoryIds?.Select(cid => cid.ToLong()), cancellationToken);
 
                 transaction.Complete();
             }
 
             item = await _questionManager.SaveAsync(item, cancellationToken);
 
-            return OkData(item);
+            return OkData(QuestionViewModel.Map(item));
         }
 
         [HttpDelete]
         [Route("questions/{id}")]
-        public async Task<ActionResult<ApiResultViewModel<QuestionViewModel>>> DeleteAsync([FromRoute] string id,
+        public async Task<ActionResult> DeleteAsync([FromRoute] string id,
             CancellationToken cancellationToken)
         {
             var item = await _questionManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
             await _questionManager.DeleteAsync(item, cancellationToken);
 
-            return OkData(item);
+            return Ok();
         }
     }
 }

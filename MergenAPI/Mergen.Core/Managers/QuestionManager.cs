@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -18,20 +19,55 @@ namespace Mergen.Core.Managers
         {
         }
 
+        public override async Task DeleteAsync(Question entity, CancellationToken cancellationToken = default)
+        {
+            using (var dbc = CreateDbContext())
+            {
+                dbc.QuestionCategories.RemoveRange(dbc.QuestionCategories.Where(q => q.QuestionId == entity.Id));
+                dbc.Questions.Remove(entity);
+                await dbc.SaveChangesAsync(cancellationToken);
+            }
+        }
+
         public async Task UpdateQuestionCategories(Question question, IEnumerable<long> categoryIds,
             CancellationToken cancellationToken = default)
         {
             using (var dbc = CreateDbContext())
             {
-                dbc.QuestionCategories.RemoveRange(dbc.QuestionCategories.Where(q => q.QuestionId == question.Id));
+                if (categoryIds == null || !categoryIds.Any())
+                {
+                    dbc.QuestionCategories.RemoveRange(dbc.QuestionCategories.Where(q => q.QuestionId == question.Id));
+                    return;
+                }
 
+                var currentQuestionCategories = await dbc.QuestionCategories.Where(q => q.QuestionId == question.Id)
+                    .ToListAsync(cancellationToken);
+
+                var newQuestionCategories = new List<QuestionCategory>();
                 foreach (var categoryId in categoryIds)
                 {
-                    dbc.QuestionCategories.Add(new QuestionCategory
+                    var existingItem = currentQuestionCategories.FirstOrDefault(q => q.CategoryId == categoryId);
+                    if (existingItem == null)
                     {
-                        QuestionId = question.Id,
-                        CategoryId = categoryId
-                    });
+                        newQuestionCategories.Add(new QuestionCategory
+                        {
+                            QuestionId = question.Id,
+                            CategoryId = categoryId
+                        });
+                    }
+                }
+
+                foreach (var currentQuestionCategory in currentQuestionCategories)
+                {
+                    if (!categoryIds.Contains(currentQuestionCategory.CategoryId))
+                    {
+                        dbc.QuestionCategories.Remove(currentQuestionCategory);
+                    }
+                }
+
+                foreach (var questionCategory in newQuestionCategories)
+                {
+                    dbc.QuestionCategories.Add(questionCategory);
                 }
 
                 await dbc.SaveChangesAsync(cancellationToken);

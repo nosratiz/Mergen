@@ -77,7 +77,7 @@ namespace Mergen.Admin.Api.API.Categories
 
         [HttpDelete]
         [Route("questioncategories/{id}")]
-        public async Task<ActionResult<ApiResultViewModel<CategoryViewModel>>> DeleteAsync([FromRoute] string id,
+        public async Task<ActionResult> DeleteAsync([FromRoute] string id,
             CancellationToken cancellationToken)
         {
             var item = await _categoryManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);

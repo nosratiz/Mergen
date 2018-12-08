@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Admin.Api.Helpers;
@@ -87,7 +87,7 @@ namespace Mergen.Admin.Api.API.ShopItems
 
         [HttpDelete]
         [Route("shopitems/{id}")]
-        public async Task<ActionResult<ApiResultViewModel<ShopItemViewModel>>> Delete([FromRoute] string id,
+        public async Task<ActionResult> Delete([FromRoute] string id,
             CancellationToken cancellationToken)
         {
             //TODO: what if somebody has bought a shop item and we delete it? impossible, should update statusid to unavailable

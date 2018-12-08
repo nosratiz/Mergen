@@ -11,5 +11,6 @@ namespace Mergen.Core.Entities
         public string Answer3 { get; set; }
         public string Answer4 { get; set; }
         public int CorrectAnswerNumber { get; set; }
+        public string CategoryIdsCache { get; set; } 
     }
 }
