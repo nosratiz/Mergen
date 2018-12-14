@@ -20,6 +20,7 @@ namespace Mergen.Admin.Api.API.Accounts.InputModels
         public string StatusId { get; set; }
         public string StatusNote { get; set; }
         public string[] RoleIds { get; set; }
+        public string CoverImageId { get; set; }
 
         public bool IsEmailVerified { get; set; }
         public bool IsPhoneNumberVerified { get; set; }

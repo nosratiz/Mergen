@@ -108,6 +108,7 @@ namespace Mergen.Admin.Api.API.Accounts
             account.IsEmailVerified = inputModel.IsEmailVerified;
             account.IsPhoneNumberVerified = inputModel.IsPhoneNumberVerified;
             account.Timezone = "Asia/Tehran";
+            account.CoverImageId = inputModel.CoverImageId;
 
             using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
