@@ -152,7 +152,6 @@ namespace Mergen.Admin.Api.API.Accounts
             return Ok();
         }
 
-
         [HttpGet]
         [Route("accounts")]
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<AccountViewModel>>>> GetAccounts(

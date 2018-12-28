@@ -9,6 +9,13 @@ namespace Mergen.Core.Data
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            EfHelpers.DisableCascadeDeletes(modelBuilder);
+
+            base.OnModelCreating(modelBuilder);
+        }
+
         public DbSet<Account> Accounts { get; set; }
         public DbSet<AccountInvitation> AccountInvitations { get; set; }
         public DbSet<AccountRole> AccountRoles { get; set; }
@@ -22,5 +29,7 @@ namespace Mergen.Core.Data
         public DbSet<Session> Sessions { get; set; }
         public DbSet<ShopItem> ShopItems { get; set; }
         public DbSet<UploadedFile> UploadedFiles { get; set; }
+        public DbSet<PurchaseLog> PurchaseLogs { get; set; }
+        public DbSet<AccountItem> AccountItems { get; set; }
     }
 }

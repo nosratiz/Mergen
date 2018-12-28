@@ -17,6 +17,7 @@ namespace Mergen.Admin.Api.API.ShopItems
         public int? UnlockSky { get; set; }
         public string StatusId { get; set; }
         public string Description { get; set; }
+        public int? Quantity { get; set; }
 
         public static ShopItemViewModel Map(ShopItem shopItem)
         {
