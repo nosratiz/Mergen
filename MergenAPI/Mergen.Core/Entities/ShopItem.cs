@@ -6,7 +6,7 @@ namespace Mergen.Core.Entities
     public class ShopItem : Entity
     {
         public string Title { get; set; }
-        public int ItemTypeId { get; set; }
+        public int TypeId { get; set; }
         public int? AvatarCategoryId { get; set; }
         public int PriceTypeId { get; set; }
         public decimal Price { get; set; }
@@ -29,6 +29,7 @@ namespace Mergen.Core.Entities
     public class AccountItem : Entity
     {
         public long AccountId { get; set; }
+        public long ShopItemId { get; set; }
         public int ItemTypeId { get; set; }
         public int Quantity { get; set; }
         public Account Account { get; set; }

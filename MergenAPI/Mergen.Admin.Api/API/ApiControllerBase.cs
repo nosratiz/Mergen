@@ -9,21 +9,25 @@ using NotFoundResult = Mergen.Admin.Api.CustomResult.NotFoundResult;
 
 namespace Mergen.Admin.Api.API
 {
+    [ApiController]
     public class ApiControllerBase : Controller
     {
         public int AccountId => (User as AccountPrincipal)?.AccountId ?? 0;
         public string AccountEmail => (User as AccountPrincipal)?.AccountEmail;
 
+        [NonAction]
         public OkObjectResult OkData<TData>(TData data, object meta = null)
         {
             return Ok(ApiResultViewModel<TData>.FromData(data, meta));
         }
 
+        [NonAction]
         public OkObjectResult OkData<TData>(TData data, int? totalCount)
         {
             return Ok(ApiResultViewModel<TData>.FromData(data, totalCount));
         }
 
+        [NonAction]
         public CreatedResult CreatedData<TData>(TData data, object meta = null)
         {
             return Created(string.Empty, ApiResultViewModel<TData>.FromData(data));

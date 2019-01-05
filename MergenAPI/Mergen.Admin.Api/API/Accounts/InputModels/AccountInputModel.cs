@@ -8,9 +8,7 @@ namespace Mergen.Admin.Api.API.Accounts.InputModels
         [Required]
         public string Email { get; set; }
 
-        [Required]
         public string Password { get; set; }
-
         public string PhoneNumber { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -19,10 +17,12 @@ namespace Mergen.Admin.Api.API.Accounts.InputModels
         public DateTime? BirthDate { get; set; }
         public string StatusId { get; set; }
         public string StatusNote { get; set; }
+        [Required]
         public string[] RoleIds { get; set; }
         public string CoverImageId { get; set; }
 
         public bool IsEmailVerified { get; set; }
         public bool IsPhoneNumberVerified { get; set; }
+        public string[] AvatarItemIds { get; set; }
     }
 }

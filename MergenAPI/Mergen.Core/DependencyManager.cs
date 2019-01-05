@@ -24,6 +24,7 @@ namespace Mergen.Core
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IEmailSender, GmailEmailSender>();
             services.AddSingleton<IFileService, FileService>();
+            services.AddSingleton<IImageProcessingService, ImageProcessingService>();
         }
 
         private static void ConfigureLocalization(this IServiceCollection services)
@@ -53,6 +54,7 @@ namespace Mergen.Core
             services.AddSingleton<SessionManager>();
             services.AddSingleton<ShopItemManager>();
             services.AddSingleton<StatsManager>();
+            services.AddSingleton<AccountItemManager>();
         }
 
         private static void ConfigOptions(this IServiceCollection services, IConfiguration configuration)

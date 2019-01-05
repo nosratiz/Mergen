@@ -8,3 +8,4 @@ Build/Build.rsp
 appsettings*.json
 .idea
 launchSettings.json
+FileStorage

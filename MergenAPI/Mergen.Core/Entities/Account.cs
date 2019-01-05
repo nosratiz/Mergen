@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Mergen.Core.Entities.Base;
 using Mergen.Core.Helpers;
 
@@ -41,5 +42,10 @@ namespace Mergen.Core.Entities
         public string ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordTokenGenerationTime { get; set; }
         public string Timezone { get; set; }
+
+
+        // Cache Items
+        public string AvatarItemIds { get; set; }
+        public string RoleIds { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using Mergen.Admin.Api.Helpers;
 using Mergen.Admin.Api.Security.AuthenticationSystem;
 using Mergen.Admin.Api.ViewModels;
 using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
 using Mergen.Core.Options;
 using Mergen.Core.QueryProcessing;
@@ -19,6 +21,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using FileOptions = Mergen.Core.Options.FileOptions;
 
 namespace Mergen.Admin.Api.API.Accounts
 {
@@ -27,8 +31,13 @@ namespace Mergen.Admin.Api.API.Accounts
     {
         private readonly AccountManager _accountManager;
         private readonly IEmailService _emailService;
+        private readonly FileManager _fileManager;
+        private readonly IFileService _fileService;
         private readonly EmailVerificationOptions _emailVerificationOptions;
         private readonly ResetPasswordOptions _resetPasswordOptions;
+        private AccountItemManager _accountItemManager;
+        private ShopItemManager _shopItemManager;
+        private readonly IImageProcessingService _imageProcessingService;
 
         public AccountController(AccountManager accountManager, IEmailService emailService,
             FileManager fileManager,
@@ -39,10 +48,18 @@ namespace Mergen.Admin.Api.API.Accounts
             IHostingEnvironment hostingEnvironment,
             IOptions<FileOptions> fileOptions,
             JwtTokenGenerator tokenGenerator,
-            SessionManager sessionManager)
+            SessionManager sessionManager,
+            AccountItemManager accountItemManager,
+            ShopItemManager shopItemManager,
+            IImageProcessingService imageProcessingService)
         {
             _accountManager = accountManager;
             _emailService = emailService;
+            _fileManager = fileManager;
+            _fileService = fileService;
+            _accountItemManager = accountItemManager;
+            _shopItemManager = shopItemManager;
+            _imageProcessingService = imageProcessingService;
             _emailVerificationOptions = emailVerificationOptions.Value;
             _resetPasswordOptions = resetPasswordOptions.Value;
         }
@@ -82,14 +99,14 @@ namespace Mergen.Admin.Api.API.Accounts
 
         [HttpPut]
         [Route("accounts/{id}")]
-        public async Task<ActionResult<ApiResultViewModel<AccountViewModel>>> UpdateAccount(string accountId,
+        public async Task<ActionResult<ApiResultViewModel<AccountViewModel>>> UpdateAccount(string id,
             [FromBody] AccountInputModel inputModel, CancellationToken cancellationToken)
         {
-            var account = await _accountManager.GetAsync(accountId.ToInt(), cancellationToken);
+            var account = await _accountManager.GetAsync(id.ToInt(), cancellationToken);
             if (account is null)
                 return NotFound();
 
-            if (await _accountManager.FindByEmailAsync(account.Email, cancellationToken) != null)
+            if (account.Email != inputModel.Email && await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken) != null)
                 return BadRequest("duplicate_email", "Account with entered email already exists.");
 
             account.Email = inputModel.Email;
@@ -112,6 +129,50 @@ namespace Mergen.Admin.Api.API.Accounts
 
             using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
+                var selectedAvatarItemIds = inputModel.AvatarItemIds.Select(q => q.ToLong()).ToArray();
+                if (selectedAvatarItemIds.Any())
+                {
+                    var accountItems = await _accountItemManager.GetByAccountIdAsync(account.Id, cancellationToken);
+                    var imagesToCombine = new List<Stream>();
+                    foreach (var selectedAvatarItemId in selectedAvatarItemIds)
+                    {
+                        var shopItem = await _shopItemManager.GetAsync(selectedAvatarItemId, cancellationToken);
+                        imagesToCombine.Add(_fileService.GetFile(shopItem.ImageFileId));
+
+                        if (!accountItems.Any(q => q.ShopItemId == selectedAvatarItemId))
+                        {
+                            // add item to user's items
+                            var newAccountItem = new AccountItem
+                            {
+                                AccountId = account.Id,
+                                ShopItemId = selectedAvatarItemId,
+                                ItemTypeId = shopItem.TypeId,
+                                Quantity = 1
+                            };
+                            newAccountItem = await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
+                        }
+                    }
+
+                    using (var avatarImg = _imageProcessingService.Combine(imagesToCombine))
+                    {
+                        var fileId = await _fileService.SaveFileAsync(avatarImg, cancellationToken);
+                        var file = await _fileManager.SaveAsync(new UploadedFile
+                        {
+                            FileId = fileId,
+                            CreatorAccountId = AccountId,
+                            Extension = "png",
+                            MimeType = "image/png",
+                            MimeTypeCategoryId = UploadedFileMimeTypeCategoryIds.Image,
+                            Name = "avatar",
+                            Size = avatarImg.Length,
+                            TypeId = UploadedFileTypeIds.AccountAvatarImage
+                        }, cancellationToken);
+                        account.AvatarImageId = file.FileId;
+                    }
+                }
+
+                account.AvatarItemIds = JsonConvert.SerializeObject(selectedAvatarItemIds);
+                account.RoleIds = JsonConvert.SerializeObject(inputModel.RoleIds?.Select(q=>q.ToLong()) ?? new long[0]);
                 account = await _accountManager.SaveAsync(account, cancellationToken);
                 await _accountManager.UpdateRolesAsync(account, inputModel.RoleIds.Select(rid => rid.ToLong()), cancellationToken);
 

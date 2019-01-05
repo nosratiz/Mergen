@@ -30,7 +30,7 @@ namespace Mergen.Admin.Api.API.ShopItems
                 Title = inputModel.Title,
                 Price = inputModel.Price,
                 PriceTypeId = inputModel.PriceTypeId.ToInt(),
-                ItemTypeId = inputModel.TypeId.ToInt(),
+                TypeId = inputModel.TypeId.ToInt(),
                 StatusId = inputModel.StatusId.ToInt(),
                 ImageFileId = inputModel.ImageFileId,
                 UnlockLevel = inputModel.UnlockLevel,
@@ -56,7 +56,7 @@ namespace Mergen.Admin.Api.API.ShopItems
             shopItem.Title = inputModel.Title;
             shopItem.Price = inputModel.Price;
             shopItem.PriceTypeId = inputModel.PriceTypeId.ToInt();
-            shopItem.ItemTypeId = inputModel.TypeId.ToInt();
+            shopItem.TypeId = inputModel.TypeId.ToInt();
             shopItem.StatusId = inputModel.StatusId.ToInt();
             shopItem.ImageFileId = inputModel.ImageFileId;
             shopItem.UnlockLevel = inputModel.UnlockLevel;

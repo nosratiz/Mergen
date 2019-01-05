@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Mergen.Admin.Api.ViewModels;
 using Mergen.Core.Entities;
-using Mergen.Core.Helpers;
+using Newtonsoft.Json;
 
 namespace Mergen.Admin.Api.API.Accounts.ViewModels
 {
@@ -23,6 +23,8 @@ namespace Mergen.Admin.Api.API.Accounts.ViewModels
         public bool IsEmailVerified { get; set; }
         public bool IsPhoneNumberVerified { get; set; }
         public string Timezone { get; set; }
+        public IEnumerable<string> AvatarItemIds { get; set; }
+        public IEnumerable<string> RoleIds { get; set; }
 
         public static AccountViewModel Map(Account account)
         {
@@ -42,8 +44,11 @@ namespace Mergen.Admin.Api.API.Accounts.ViewModels
             model.CoverImageId = account.CoverImageId;
             model.AvatarImageId = account.AvatarImageId;
             model.Timezone = account.Timezone;
+            model.AvatarItemIds = account.AvatarItemIds != null ? JsonConvert.DeserializeObject<long[]>(account.AvatarItemIds).Select(q => q.ToString()) : new string[0];
+            model.RoleIds = account.RoleIds != null ? JsonConvert.DeserializeObject<long[]>(account.RoleIds).Select(q=>q.ToString()) : new string[0];
             return model;
         }
+
 
         public static IEnumerable<AccountViewModel> MapAll(IEnumerable<Account> accounts)
         {

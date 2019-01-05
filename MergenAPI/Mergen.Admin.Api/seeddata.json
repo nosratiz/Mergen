@@ -29,10 +29,10 @@
       }
     ],
     "AccountRoles": [
-        {
-          "AccountId": 1001,
-          "RoleId": 100 
-        }
-    ] 
+      {
+        "AccountId": 1001,
+        "RoleId": 100
+      }
+    ]
   }
 }
