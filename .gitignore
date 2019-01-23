@@ -9,3 +9,4 @@ appsettings*.json
 .idea
 launchSettings.json
 FileStorage
+.vscode
