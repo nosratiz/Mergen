@@ -6,7 +6,7 @@ Build/Build.rsp
 .vs
 *.DotSettings
 appsettings*.json
+seeddata*.json
 .idea
 launchSettings.json
-FileStorage
-.vscode
+FileStorage.vscode
