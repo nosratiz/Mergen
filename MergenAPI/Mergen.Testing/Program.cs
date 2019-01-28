@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Mergen.Core;
 using Mergen.Core.Data;
 using Microsoft.Extensions.Configuration;
@@ -13,15 +15,24 @@ namespace Mergen.Testing
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            IServiceCollection services = new ServiceCollection();
-            IConfiguration configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
-            services.RegisterMergenServices(configuration, true);
-            var sp = services.BuildServiceProvider();
-            ApplicationEvents.ApplicationStart(sp, configuration);
+            try
+            {
+                IServiceCollection services = new ServiceCollection();
+                IConfiguration configuration = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json").Build();
+                services.RegisterMergenServices(configuration, true);
+                var sp = services.BuildServiceProvider();
+                ApplicationEvents.ApplicationStart(sp, configuration);
 
-            var db = sp.GetRequiredService<DataContext>();
+                var db = sp.GetRequiredService<DataContext>();
+                var gamingService = new GamingService(db);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }
