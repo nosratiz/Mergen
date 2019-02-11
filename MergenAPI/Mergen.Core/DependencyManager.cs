@@ -55,6 +55,8 @@ namespace Mergen.Core
             services.AddSingleton<ShopItemManager>();
             services.AddSingleton<StatsManager>();
             services.AddSingleton<AccountItemManager>();
+
+            services.AddScoped<GamingService>();
         }
 
         private static void ConfigOptions(this IServiceCollection services, IConfiguration configuration)

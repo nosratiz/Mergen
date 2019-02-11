@@ -17,13 +17,13 @@ namespace Mergen.Core.Data
             _dataContext = dataContext;
         }
 
-        public async Task<OneToOneBattle> StartRandomBattleAsync(Account player1,
+        public async Task<OneToOneBattle> StartRandomBattleAsync(Account player1, Account player2 = default,
             CancellationToken cancellationToken = default)
         {
             OneToOneBattle battle;
 
             var pendingBattle = await _dataContext.OneToOneBattles.OrderBy(q => q.StartDateTime)
-                .FirstOrDefaultAsync(q => q.Player2Id == null, cancellationToken);
+                .FirstOrDefaultAsync(q => q.Player1Id != player1.Id && q.Player2Id == null, cancellationToken);
 
             if (pendingBattle != null)
             {
@@ -32,20 +32,7 @@ namespace Mergen.Core.Data
             }
             else
             {
-                battle = new OneToOneBattle
-                {
-                    BattleType = BattleType.OneOnOne,
-                    Player1Id = player1.Id,
-                    StartDateTime = DateTime.UtcNow,
-                    Round = 1,
-                    BattleState = BattleState.SelectCategory
-                };
-
-                var startingGame = await CreateGameAsync(player1, cancellationToken);
-                battle.Games.Add(startingGame);
-
-                battle.LastGame = startingGame;
-
+                battle = await StartNewRandomBattleAsync(player1, player2, cancellationToken);
                 _dataContext.OneToOneBattles.Add(battle);
             }
 
@@ -53,14 +40,14 @@ namespace Mergen.Core.Data
             return battle;
         }
 
-        public async Task<OneToOneBattle> StartBattleWithPlayerAsync(Account player1, Account player2,
+        private async Task<OneToOneBattle> StartNewRandomBattleAsync(Account player1, Account player2 = default,
             CancellationToken cancellationToken = default)
         {
             var battle = new OneToOneBattle
             {
                 BattleType = BattleType.OneOnOne,
                 Player1Id = player1.Id,
-                Player2Id = player2.Id,
+                Player2Id = player2?.Id,
                 Round = 1,
                 StartDateTime = DateTime.UtcNow,
                 BattleState = BattleState.SelectCategory
@@ -75,7 +62,7 @@ namespace Mergen.Core.Data
             return battle;
         }
 
-        public async Task<Game> CreateGameAsync(Account player, CancellationToken cancellationToken = default)
+        private async Task<Game> CreateGameAsync(Account player, CancellationToken cancellationToken = default)
         {
             var game = new Game
             {
@@ -122,53 +109,6 @@ namespace Mergen.Core.Data
             await _dataContext.SaveChangesAsync(cancellationToken);
 
             return Result.Success();
-        }
-    }
-
-    public enum StatusCode
-    {
-        Success,
-        Forbidden
-    }
-
-    public class Result
-    {
-        public Result(StatusCode statusCode)
-        {
-            StatusCode = statusCode;
-        }
-
-        public bool IsSuccess => StatusCode == StatusCode.Success;
-        public StatusCode StatusCode { get; protected set; }
-
-        public static Result Error(StatusCode statusCode)
-        {
-            return new Result(statusCode);
-        }
-
-        public static Result<T> Error<T>(StatusCode statusCode)
-        {
-            return new Result<T>(statusCode, default);
-        }
-
-        public static Result Success()
-        {
-            return new Result(StatusCode.Success);
-        }
-
-        public static Result<T> Success<T>(T value)
-        {
-            return new Result<T>(StatusCode.Success, value);
-        }
-    }
-
-    public class Result<T> : Result
-    {
-        public T Value { get; }
-
-        public Result(StatusCode statusCode, T value) : base(statusCode)
-        {
-            Value = value;
         }
     }
 }
