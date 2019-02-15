@@ -69,6 +69,7 @@ namespace Mergen.Core
             services.Configure<FinancialOptions>(configuration.GetSection("Financial"));
             services.Configure<FileOptions>(configuration.GetSection("File"));
             services.Configure<BaseUrlsOptions>(configuration.GetSection("BaseUrls"));
+            services.Configure<GameSettings>(configuration.GetSection("GameSettings"));
         }
 
         private static void RegisterQueryProcessing(this IServiceCollection services)

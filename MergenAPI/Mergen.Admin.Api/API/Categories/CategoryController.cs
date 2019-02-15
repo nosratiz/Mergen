@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Mergen.Admin.Api.Helpers;
 using Mergen.Admin.Api.ViewModels;
 using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
 using Mergen.Core.QueryProcessing;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +48,7 @@ namespace Mergen.Admin.Api.API.Categories
             {
                 Title = inputModel.Title,
                 Description = inputModel.Description,
-                StatusId = inputModel.StatusId.ToLong(),
+                StatusId = (CategoryStatusIds)inputModel.StatusId.ToInt(),
                 IconFileId = inputModel.IconFileId,
                 CoverImageFileId = inputModel.CoverImageFileId,
             };
@@ -66,7 +67,7 @@ namespace Mergen.Admin.Api.API.Categories
 
             item.Title = inputModel.Title;
             item.Description = inputModel.Description;
-            item.StatusId = inputModel.StatusId.ToLong();
+            item.StatusId = (CategoryStatusIds)inputModel.StatusId.ToInt();
             item.IconFileId = inputModel.IconFileId;
             item.CoverImageFileId = inputModel.CoverImageFileId;
 

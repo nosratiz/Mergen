@@ -1,6 +1,6 @@
 namespace Mergen.Core.EntityIds
 {
-    public static class ShopItemsTypeIds
+    public static class ShopItemTypeIds
     {
         public const int Coin = 1;
         public const int AvatarItem = 2;

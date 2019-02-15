@@ -47,6 +47,9 @@ namespace Mergen.Core
 
                         context.SaveChanges();
                     }
+
+                    foreach (var setting in context.Settings)
+                        configuration[setting.Key] = setting.Value;
                 }
                 catch (Exception e)
                 {

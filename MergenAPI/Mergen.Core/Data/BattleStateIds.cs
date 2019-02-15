@@ -1,9 +1,10 @@
 namespace Mergen.Core.Data
 {
-    public enum BattleState
+    public enum BattleStateIds
     {
         SelectCategory,
         AnsweringQuestions,
-        Completed
+        Completed,
+        Expired
     }
 }

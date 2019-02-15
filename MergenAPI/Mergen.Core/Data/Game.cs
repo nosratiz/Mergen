@@ -16,7 +16,7 @@ namespace Mergen.Core.Data
         public long PlayerId { get; set; }
         public Account Player { get; set; }
 
-        public long SelectedCategoryId { get; set; }
+        public long? SelectedCategoryId { get; set; }
         public Category SelectedCategory { get; set; }
 
         public ICollection<GameCategory> GameCategories { get; set; }

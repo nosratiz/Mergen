@@ -1,4 +1,4 @@
-﻿namespace Mergen.Game.Api.API.Battles
+namespace Mergen.Game.Api.API
 {
     public class EntityViewModel
     {

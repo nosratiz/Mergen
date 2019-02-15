@@ -33,6 +33,11 @@ namespace Mergen.Game.Api.API.Battles
         {
             return Mapper.Map<CategoryViewModel>(category);
         }
+
+        public static IEnumerable<CategoryViewModel> Map(IEnumerable<Category> categories)
+        {
+            return categories.Select(Map);
+        }
     }
 
     public class QuestionViewModel : EntityViewModel

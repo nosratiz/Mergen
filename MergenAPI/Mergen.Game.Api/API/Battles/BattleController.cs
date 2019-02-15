@@ -1,12 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Mergen.Core.Data;
+using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
+using Mergen.Core.Options;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -15,27 +22,37 @@ namespace Mergen.Game.Api.API.Battles
         private readonly DataContext _dataContext;
         private readonly GamingService _gamingService;
         private readonly BattleMapper _battleMapper;
+        private readonly GameSettings _gameSettingsOptions;
 
-        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper)
+        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions)
         {
             _dataContext = dataContext;
             _gamingService = gamingService;
             _battleMapper = battleMapper;
+            _gameSettingsOptions = gameSettingsOptions.Value;
         }
 
         [HttpGet]
         [Route("accounts/{accountId}/activebattles")]
-        public async Task<ApiResultViewModel<BattleViewModel>> GetActiveBattles([Required]string accountId, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetActiveBattles([Required]long accountId, CancellationToken cancellationToken)
         {
-            return null;
+            var activeBattles = await _dataContext.OneToOneBattles.AsNoTracking()
+                .Where(q => (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired)
+                .ToListAsync(cancellationToken);
+
+            return OkData(await _battleMapper.MapAllAsync(activeBattles, cancellationToken));
         }
 
         [HttpGet]
         [Route("accounts/{accountId}/recentbattles")]
-        public async Task<ApiResultViewModel<BattleViewModel>> GetRecentBattles(string accountId, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<BattleViewModel>>>> GetRecentBattles(long accountId, CancellationToken cancellationToken)
         {
+            var recentBattles = await _dataContext.OneToOneBattles
+                .Where(q => (q.Player1Id == accountId || q.Player2Id == accountId) &&
+                            (q.BattleStateId == BattleStateIds.Completed || q.BattleStateId == BattleStateIds.Expired))
+                .ToListAsync(cancellationToken);
 
-            return null;
+            return OkData(await _battleMapper.MapAllAsync(recentBattles, cancellationToken));
         }
 
         [HttpPost]
@@ -82,6 +99,64 @@ namespace Mergen.Game.Api.API.Battles
 
             return OkData(GameViewModel.Map(game));
         }
+
+        [HttpPost]
+        [Route("games/{gameId}/selectedCategory")]
+        public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory(long gameId, long categoryId, bool customCategory,
+            CancellationToken cancellationToken)
+        {
+            var game = await _dataContext.Games.Include(q=>q.GameCategories).ThenInclude(q=>q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+            if (game == null)
+                return NotFound();
+
+            if (game.SelectedCategoryId != null)
+                return BadRequest("already_selected");
+
+            using (var trans = new TransactionScope())
+            {
+                Category category;
+                if (customCategory)
+                {
+                    category = await _dataContext.Categories.FirstOrDefaultAsync(q => q.Id == categoryId, cancellationToken);
+                    if (category == null)
+                        return BadRequest();
+
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
+                        q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+
+                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.SelectCustomCategoryPrice)
+                        return BadRequest("insufficient_funds",
+                            $"You must have {_gameSettingsOptions.SelectCustomCategoryPrice} coins to select custom category.");
+
+                    accountCoin.Quantity -= _gameSettingsOptions.SelectCustomCategoryPrice;
+                }
+                else
+                {
+                    category = game.GameCategories.FirstOrDefault(q => q.CategoryId == categoryId)?.Category;
+                    if (category == null)
+                        return BadRequest();
+                }
+
+                game.SelectedCategoryId = categoryId;
+                await _dataContext.SaveChangesAsync(cancellationToken);
+
+                trans.Complete();
+            }
+
+            return OkData(GameViewModel.Map(game));
+        }
+
+        [HttpGet]
+        [Route("activecategories")]
+        public async Task<ActionResult<ApiResultViewModel<CategoryViewModel>>> GetActiveCategories(
+            CancellationToken cancellationToken)
+        {
+            var activeCategories = await _dataContext.Categories.AsNoTracking()
+                .Where(q => q.StatusId == CategoryStatusIds.Enabled).ToListAsync(cancellationToken);
+            return OkData(CategoryViewModel.Map(activeCategories));
+        }
+
+        
 
         /*[HttpPost]
         [Route("accounts/{accountId}/onetoonebattleinvitations")]

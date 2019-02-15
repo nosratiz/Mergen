@@ -26,6 +26,6 @@ namespace Mergen.Core.Data
 
         public ICollection<Game> Games { get; set; }
 
-        public BattleState BattleState { get; set; }
+        public BattleStateIds BattleStateId { get; set; }
     }
 }

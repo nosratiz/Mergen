@@ -1,4 +1,5 @@
-﻿using System.Threading;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Mergen.Core.Data;
@@ -24,6 +25,17 @@ namespace Mergen.Game.Api.API.Battles
                 vm.Player2MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);
 
             return vm;
+        }
+
+        public async ValueTask<IEnumerable<OneToOneBattleViewModel>> MapAllAsync(IEnumerable<OneToOneBattle> battles,
+            CancellationToken cancellationToken)
+        {
+            var vms = new List<OneToOneBattleViewModel>();
+
+            foreach (var oneToOneBattle in battles)
+                vms.Add(await MapAsync(oneToOneBattle, cancellationToken));
+
+            return vms;
         }
     }
 }

@@ -50,7 +50,7 @@ namespace Mergen.Core.Data
                 Player2Id = player2?.Id,
                 Round = 1,
                 StartDateTime = DateTime.UtcNow,
-                BattleState = BattleState.SelectCategory
+                BattleStateId = BattleStateIds.SelectCategory
             };
 
             var startingGame = await CreateGameAsync(player1, cancellationToken);
@@ -104,7 +104,7 @@ namespace Mergen.Core.Data
 
             // TODO: add random questions to battle
 
-            battle.BattleState = BattleState.AnsweringQuestions;
+            battle.BattleStateId = BattleStateIds.AnsweringQuestions;
 
             await _dataContext.SaveChangesAsync(cancellationToken);
 

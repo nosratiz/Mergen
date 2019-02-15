@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Data;
 using Mergen.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +40,7 @@ namespace Mergen.Core.Data
         public DbSet<Game> Games { get; set; }
         public DbSet<GameCategory> GameCategories { get; set; }
         public DbSet<GameQuestion> GameQuestions { get; set; }
-
+        public DbSet<Setting> Settings { get; set; }
+        public DbSet<Payment> Payments { get; set; }
     }
 }
