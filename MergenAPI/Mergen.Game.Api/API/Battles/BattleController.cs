@@ -102,8 +102,7 @@ namespace Mergen.Game.Api.API.Battles
 
         [HttpPost]
         [Route("games/{gameId}/selectedCategory")]
-        public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory(long gameId, long categoryId, bool customCategory,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory(long gameId, long categoryId, bool customCategory, CancellationToken cancellationToken)
         {
             var game = await _dataContext.Games.Include(q=>q.GameCategories).ThenInclude(q=>q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
             if (game == null)
@@ -145,6 +144,35 @@ namespace Mergen.Game.Api.API.Battles
 
             return OkData(GameViewModel.Map(game));
         }
+
+        [HttpPost]
+        [Route("games/{gameId}/randomizecategories")]
+        public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> RandomizeGameCategories(long gameId,
+            CancellationToken cancellationToken)
+        {
+            using (var tran = new TransactionScope())
+            {
+                var game = await _dataContext.Games.Include(q => q.GameCategories).ThenInclude(q => q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+                if (game == null)
+                    return NotFound();
+
+                var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
+                    q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+
+                if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.RandomizeCategoryPrice)
+                    return BadRequest("insufficient_funds",
+                        $"You must have {_gameSettingsOptions.RandomizeCategoryPrice} coins to select custom category.");
+
+                accountCoin.Quantity -= _gameSettingsOptions.RandomizeCategoryPrice;
+
+                await _gamingService.RandomizeCategories(game, cancellationToken);
+
+                tran.Complete();
+            }
+
+            return Ok();
+        }
+
 
         [HttpGet]
         [Route("activecategories")]

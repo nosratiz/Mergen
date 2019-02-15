@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -133,46 +134,54 @@ namespace Mergen.Game.Api.API.Shop
         [Route("accounts/{accountId}/items")]
         public async Task<ActionResult> PurchaseItemByCoin(long accountId, [FromBody]PurchaseByCoinInputModel inputModel, CancellationToken cancellationToken)
         {
-            var account = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == accountId, cancellationToken);
-            if (account == null)
-                return NotFound();
-
-            var shopItem = await _dataContext.ShopItems.FirstOrDefaultAsync(q => q.StatusId == ShopItemStatusIds.Available && q.Id == inputModel.ShopItemId, cancellationToken);
-            if (shopItem == null)
-                return BadRequest("invalid_shopItemId");
-
-            if (shopItem.PriceTypeId != PriceTypeIds.Coins)
-                return BadRequest("invalid_shopItemPriceTypeId");
-
-            var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
-                q.AccountId == accountId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
-
-            if (accountCoin == null || accountCoin.Quantity < shopItem.Price)
-                return BadRequest("insufficient_funds",
-                    $"You must have {shopItem.Price} coins to buy this item.");
-
-            accountCoin.Quantity -= (int)shopItem.Price;
-
-            var accountItem = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == accountId && q.ItemTypeId == shopItem.TypeId, cancellationToken);
-
-            if (accountItem != null)
+            using (var trans = new TransactionScope())
             {
-                accountItem.Quantity += shopItem.Quantity ?? 1;
-            }
-            else
-            {
-                accountItem = new AccountItem
+                var account =
+                    await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == accountId, cancellationToken);
+                if (account == null)
+                    return NotFound();
+
+                var shopItem = await _dataContext.ShopItems.FirstOrDefaultAsync(
+                    q => q.StatusId == ShopItemStatusIds.Available && q.Id == inputModel.ShopItemId, cancellationToken);
+                if (shopItem == null)
+                    return BadRequest("invalid_shopItemId");
+
+                if (shopItem.PriceTypeId != PriceTypeIds.Coins)
+                    return BadRequest("invalid_shopItemPriceTypeId");
+
+                var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
+                    q.AccountId == accountId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+
+                if (accountCoin == null || accountCoin.Quantity < shopItem.Price)
+                    return BadRequest("insufficient_funds",
+                        $"You must have {shopItem.Price} coins to buy this item.");
+
+                accountCoin.Quantity -= (int)shopItem.Price;
+
+                var accountItem = await _dataContext.AccountItems.FirstOrDefaultAsync(
+                    q => q.AccountId == accountId && q.ItemTypeId == shopItem.TypeId, cancellationToken);
+
+                if (accountItem != null)
                 {
-                    AccountId = accountId,
-                    ShopItemId = shopItem.Id,
-                    Quantity = shopItem.Quantity ?? 1,
-                    ItemTypeId = shopItem.TypeId
-                };
+                    accountItem.Quantity += shopItem.Quantity ?? 1;
+                }
+                else
+                {
+                    accountItem = new AccountItem
+                    {
+                        AccountId = accountId,
+                        ShopItemId = shopItem.Id,
+                        Quantity = shopItem.Quantity ?? 1,
+                        ItemTypeId = shopItem.TypeId
+                    };
 
-                _dataContext.AccountItems.Add(accountItem);
+                    _dataContext.AccountItems.Add(accountItem);
+                }
+
+                await _dataContext.SaveChangesAsync(cancellationToken);
+
+                trans.Complete();
             }
-
-            await _dataContext.SaveChangesAsync(cancellationToken);
 
             return Ok();
         }

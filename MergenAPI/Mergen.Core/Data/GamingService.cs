@@ -110,5 +110,27 @@ namespace Mergen.Core.Data
 
             return Result.Success();
         }
+
+        public async Task<Result> RandomizeCategories(Game game, CancellationToken cancellationToken)
+        {
+            var oldCategories = game.GameCategories.Select(q => q.CategoryId).ToList();
+            game.GameCategories.Clear();
+
+            var randomCategoryIds = new HashSet<long>();
+            while (game.GameCategories.Count < 3)
+            {
+                var randomCategory = await _dataContext.Categories.OrderBy(q => Guid.NewGuid())
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (randomCategory != null && !oldCategories.Contains(randomCategory.Id) && randomCategoryIds.Add(randomCategory.Id))
+                {
+                    game.GameCategories.Add(new GameCategory
+                    {
+                        CategoryId = randomCategory.Id
+                    });
+                }
+            }
+
+            return Result.Success();
+        }
     }
 }

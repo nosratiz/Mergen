@@ -9,5 +9,6 @@ namespace Mergen.Core.Options
     public class GameSettings
     {
         public int SelectCustomCategoryPrice { get; set; }
+        public int RandomizeCategoryPrice { get; set; }
     }
 }
