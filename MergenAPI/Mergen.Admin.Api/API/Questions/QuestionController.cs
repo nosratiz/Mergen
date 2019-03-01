@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +10,7 @@ using Mergen.Core.Entities;
 using Mergen.Core.Managers;
 using Mergen.Core.QueryProcessing;
 using Microsoft.AspNetCore.Mvc;
+using OfficeOpenXml;
 
 namespace Mergen.Admin.Api.API.Questions
 {
@@ -69,6 +72,62 @@ namespace Mergen.Admin.Api.API.Questions
             }
 
             return OkData(QuestionViewModel.Map(item));
+        }
+
+        [HttpPost]
+        [Route("questionfiles")]
+        public async Task<ActionResult<ApiResultViewModel<QuestionViewModel>>> ImportQuestionsFromFile(
+            [FromForm]QuestionFileImportInputModel inputModel, CancellationToken cancellationToken)
+        {
+            var categoryId = inputModel.CategoryId.ToLong();
+            var questions = new List<Question>();
+
+            using (var p = new ExcelPackage(inputModel.File.OpenReadStream()))
+            {
+                foreach (var ws in p.Workbook.Worksheets)
+                {
+                    var start = ws.Dimension.Start;
+                    var end = ws.Dimension.End;
+                    for (int i = start.Row + 1; i < end.Row; i++)
+                    {
+                        var question = new Question();
+
+                        question.Body = ws.Cells[i, 2].GetValue<string>();
+                        question.Answer1 = ws.Cells[i, 3].GetValue<string>();
+                        question.Answer2 = ws.Cells[i, 4].GetValue<string>();
+                        question.Answer3 = ws.Cells[i, 5].GetValue<string>();
+                        question.Answer4 = ws.Cells[i, 6].GetValue<string>();
+                        var r = ws.Cells[i, 7].GetValue<string>();
+
+                        if (r.StartsWith("A", StringComparison.OrdinalIgnoreCase) || string.Equals(r, question.Answer1))
+                        {
+                            question.CorrectAnswerNumber = 1;
+                        }
+                        else if (r.StartsWith("B", StringComparison.OrdinalIgnoreCase) || string.Equals(r, question.Answer2))
+                        {
+                            question.CorrectAnswerNumber = 2;
+                        }
+                        else if (r.StartsWith("C", StringComparison.OrdinalIgnoreCase) || string.Equals(r, question.Answer3))
+                        {
+                            question.CorrectAnswerNumber = 3;
+                        }
+                        else if (r.StartsWith("D", StringComparison.OrdinalIgnoreCase) || string.Equals(r, question.Answer4))
+                        {
+                            question.CorrectAnswerNumber = 4;
+                        }
+                        else
+                        {
+                            return BadRequest("invalid_question", $"Correct answer of question not found. row:{i}");
+                        }
+
+                        _questionManager.SetQuestionCategory(question, categoryId);
+                        question = await _questionManager.SaveAsync(question, cancellationToken);
+                        questions.Add(question);
+                    }
+                }
+            }
+
+            return OkData(QuestionViewModel.MapAll(questions));
         }
 
         [HttpPut]

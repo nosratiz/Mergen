@@ -73,5 +73,16 @@ namespace Mergen.Core.Managers
                 await dbc.SaveChangesAsync(cancellationToken);
             }
         }
+
+        public void SetQuestionCategory(Question question, long categoryId)
+        {
+            question.QuestionCategories.Add(new QuestionCategory
+            {
+                Question = question,
+                CategoryId = categoryId
+            });
+
+            question.CategoryIdsCache = categoryId.ToString();
+        }
     }
 }

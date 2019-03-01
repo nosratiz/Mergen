@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Mergen.Core.Entities.Base;
 
 namespace Mergen.Core.Entities
@@ -16,5 +18,12 @@ namespace Mergen.Core.Entities
         public long Answer4ChooseHistory { get; set; }
         public int CorrectAnswerNumber { get; set; }
         public string CategoryIdsCache { get; set; }
+
+        public ICollection<QuestionCategory> QuestionCategories { get; set; }
+
+        public Question()
+        {
+            QuestionCategories = new Collection<QuestionCategory>();
+        }
     }
 }

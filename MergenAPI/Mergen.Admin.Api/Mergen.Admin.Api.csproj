@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <PackageReference Include="automapper" Version="8.0.0" />
+    <PackageReference Include="EPPlus" Version="4.5.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="nodatime" Version="2.4.2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="3.0.0" />

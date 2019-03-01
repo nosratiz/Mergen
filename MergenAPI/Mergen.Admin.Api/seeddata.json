@@ -33,6 +33,38 @@
         "AccountId": 1001,
         "RoleId": 100
       }
+    ],
+    "Categories": [
+      {
+        "Id": 1001,
+        "Title": "Cat1",
+        "Description": "Desc1"
+      },
+      {
+        "Id": 1002,
+        "Title": "Cat2",
+        "Description": "Desc2"
+      },
+      {
+        "Id": 1003,
+        "Title": "Cat3",
+        "Description": "Desc3"
+      },
+      {
+        "Id": 1004,
+        "Title": "Cat4",
+        "Description": "Desc4"
+      },
+      {
+        "Id": 1005,
+        "Title": "Cat5",
+        "Description": "Desc5"
+      },
+      {
+        "Id": 1006,
+        "Title": "Cat6",
+        "Description": "Desc6"
+      }
     ]
   }
 }
