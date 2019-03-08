@@ -42,5 +42,6 @@ namespace Mergen.Core.Data
         public DbSet<GameQuestion> GameQuestions { get; set; }
         public DbSet<Setting> Settings { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<AccountCategoryStat> AccountCategoryStats { get; set; }
     }
 }

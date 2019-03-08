@@ -13,7 +13,6 @@ using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using NodaTime;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -104,7 +103,7 @@ namespace Mergen.Game.Api.API.Battles
         [Route("games/{gameId}/selectedCategory")]
         public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory(long gameId, long categoryId, bool customCategory, CancellationToken cancellationToken)
         {
-            var game = await _dataContext.Games.Include(q=>q.GameCategories).ThenInclude(q=>q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+            var game = await _dataContext.Games.Include(q => q.GameCategories).ThenInclude(q => q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
             if (game == null)
                 return NotFound();
 
@@ -184,7 +183,122 @@ namespace Mergen.Game.Api.API.Battles
             return OkData(CategoryViewModel.Map(activeCategories));
         }
 
-        
+        [HttpPost]
+        [Route("games/{gameId}/answers")]
+        public async Task<ActionResult> AnswerGameQuestions([FromRoute]long gameId, [FromBody]AnswerGameQuestionsInputModel inputModel,
+            CancellationToken cancellationToken)
+        {
+            var game = await _dataContext.Games
+                .Include(q => q.GameQuestions)
+                .ThenInclude(q => q.Question)
+                .ThenInclude(q => q.QuestionCategories)
+                .FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+
+            if (game == null)
+                return NotFound();
+
+            var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId, cancellationToken);
+            if (playerStat == null)
+            {
+                playerStat = new AccountStatsSummary
+                {
+                    AccountId = game.PlayerId
+                };
+
+                _dataContext.AccountStatsSummaries.Add(playerStat);
+            }
+
+            foreach (var answer in inputModel.Answers)
+            {
+                var gq = game.GameQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
+
+                if (gq == null)
+                    return BadRequest("invalid_answers", "no such question in this game.");
+
+                if (gq.SelectedAnswer != 0)
+                    return BadRequest("invalid_answers", "question already answered.");
+
+                gq.SelectedAnswer = answer.SelectedAnswer;
+
+                if (gq.Question.CorrectAnswerNumber == gq.SelectedAnswer)
+                    gq.Score = 1;
+                else
+                    gq.Score = 0;
+
+                switch (gq.SelectedAnswer)
+                {
+                    case 1:
+                        gq.Question.Answer1ChooseHistory++;
+                        break;
+                    case 2:
+                        gq.Question.Answer2ChooseHistory++;
+                        break;
+                    case 3:
+                        gq.Question.Answer3ChooseHistory++;
+                        break;
+                    case 4:
+                        gq.Question.Answer4ChooseHistory++;
+                        break;
+                }
+
+                foreach (var category in gq.Question.QuestionCategories)
+                {
+                    var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.CategoryId == category.Id, cancellationToken);
+                    if (playerCategoryStat == null)
+                    {
+                        playerCategoryStat = new AccountCategoryStat
+                        {
+                            AccountId = game.PlayerId,
+                            CategoryId = category.Id
+                        };
+
+                        _dataContext.AccountCategoryStats.Add(playerCategoryStat);
+                    }
+
+                    playerCategoryStat.TotalQuestionsCount += 1;
+                    playerCategoryStat.CorrectAnswersCount += gq.Score;
+                }
+
+                if (answer.UsedAnswersHistoryHelper)
+                {
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AnswersHistoryHelperPrice)
+                    {
+                        // TODO: cheat detected
+                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                    }
+
+                    accountCoin.Quantity -= _gameSettingsOptions.AnswersHistoryHelperPrice;
+                }
+
+                if (answer.UsedRemoveTwoAnswersHelper)
+                {
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.RemoveTwoAnswersHelperPrice)
+                    {
+                        // TODO: cheat detected
+                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                    }
+
+                    accountCoin.Quantity -= _gameSettingsOptions.RemoveTwoAnswersHelperPrice;
+                }
+
+                if (answer.UsedAskMergenHelper)
+                {
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AskMergenHelperPrice)
+                    {
+                        // TODO: cheat detected
+                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                    }
+
+                    accountCoin.Quantity -= _gameSettingsOptions.AskMergenHelperPrice;
+                }
+            }
+
+            await _dataContext.SaveChangesAsync(cancellationToken);
+            return Ok();
+        }
 
         /*[HttpPost]
         [Route("accounts/{accountId}/onetoonebattleinvitations")]

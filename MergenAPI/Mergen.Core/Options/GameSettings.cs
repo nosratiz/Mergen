@@ -10,5 +10,8 @@ namespace Mergen.Core.Options
     {
         public int SelectCustomCategoryPrice { get; set; }
         public int RandomizeCategoryPrice { get; set; }
+        public int RemoveTwoAnswersHelperPrice { get; set; }
+        public int AnswersHistoryHelperPrice { get; set; }
+        public int AskMergenHelperPrice { get; set; }
     }
 }
