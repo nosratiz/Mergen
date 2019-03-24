@@ -10,7 +10,7 @@ namespace Mergen.Core.Data
         public long QuestionId { get; set; }
         public Question Question { get; set; }
 
-        public int SelectedAnswer { get; set; }
+        public int? SelectedAnswer { get; set; }
         public int Score { get; set; }
     }
 }

@@ -62,7 +62,7 @@ namespace Mergen.Core.Data
             return battle;
         }
 
-        private async Task<Game> CreateGameAsync(Account player, CancellationToken cancellationToken = default)
+        public async Task<Game> CreateGameAsync(Account player, CancellationToken cancellationToken = default)
         {
             var game = new Game
             {

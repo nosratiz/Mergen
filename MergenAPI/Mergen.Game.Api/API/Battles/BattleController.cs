@@ -215,7 +215,7 @@ namespace Mergen.Game.Api.API.Battles
                 if (gq == null)
                     return BadRequest("invalid_answers", "no such question in this game.");
 
-                if (gq.SelectedAnswer != 0)
+                if (gq.SelectedAnswer.HasValue)
                     return BadRequest("invalid_answers", "question already answered.");
 
                 gq.SelectedAnswer = answer.SelectedAnswer;
@@ -293,6 +293,27 @@ namespace Mergen.Game.Api.API.Battles
                     }
 
                     accountCoin.Quantity -= _gameSettingsOptions.AskMergenHelperPrice;
+                }
+            }
+
+            if (game.GameQuestions.All(q => q.SelectedAnswer.HasValue))
+            {
+                game.GameState = GameState.Completed;
+
+                var battle = await _dataContext.OneToOneBattles
+                    .Include(q => q.Games)
+                    .Include(q => q.Player1)
+                    .Include(q => q.Player2)
+                    .FirstOrDefaultAsync(q => q.Id == game.BattleId, cancellationToken);
+
+                if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameState.Completed))
+                {
+                    battle.BattleStateId = BattleStateIds.Completed;
+                }
+                else
+                {
+                    var newGame = await _gamingService.CreateGameAsync(battle.Player1Id != game.PlayerId ? battle.Player1 : battle.Player2, cancellationToken);
+                    battle.LastGame = newGame;
                 }
             }
 
