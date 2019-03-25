@@ -23,12 +23,18 @@ namespace Mergen.Core.Data
             OneToOneBattle battle;
 
             var pendingBattle = await _dataContext.OneToOneBattles.OrderBy(q => q.StartDateTime)
+                .Include(q => q.LastGame)
                 .FirstOrDefaultAsync(q => q.Player1Id != player1.Id && q.Player2Id == null, cancellationToken);
 
             if (pendingBattle != null)
             {
                 pendingBattle.Player2Id = player1.Id;
                 battle = pendingBattle;
+
+                if (pendingBattle.LastGame != null && pendingBattle.LastGame.GameState == GameState.Player2AnswerQuestions)
+                {
+                    pendingBattle.LastGame.CurrentTurnPlayerId = player1.Id;
+                }
             }
             else
             {
