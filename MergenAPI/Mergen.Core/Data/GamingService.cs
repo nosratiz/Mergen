@@ -33,7 +33,6 @@ namespace Mergen.Core.Data
             else
             {
                 battle = await StartNewRandomBattleAsync(player1, player2, cancellationToken);
-                _dataContext.OneToOneBattles.Add(battle);
             }
 
             await _dataContext.SaveChangesAsync(cancellationToken);
@@ -53,21 +52,26 @@ namespace Mergen.Core.Data
                 BattleStateId = BattleStateIds.SelectCategory
             };
 
-            var startingGame = await CreateGameAsync(player1, cancellationToken);
+            _dataContext.Battles.Add(battle);
+
+            var startingGame = await CreateGameAsync(battle, player1, cancellationToken);
             battle.Games.Add(startingGame);
-
-            battle.LastGame = startingGame;
-
+            startingGame.Battle = battle;
             await _dataContext.SaveChangesAsync(cancellationToken);
+
+            //battle.LastGame = startingGame;
+            battle.LastGameId = startingGame.Id;
+
             return battle;
         }
 
-        public async Task<Game> CreateGameAsync(Account player, CancellationToken cancellationToken = default)
+        public async Task<Game> CreateGameAsync(OneToOneBattle battle, Account player, CancellationToken cancellationToken = default)
         {
             var game = new Game
             {
-                PlayerId = player.Id,
-                GameState = GameState.SelectCategory
+                CurrentTurnPlayerId = player?.Id,
+                GameState = GameState.SelectCategory,
+                Battle = battle
             };
 
             var randomCategoryIds = new HashSet<long>();
@@ -84,6 +88,7 @@ namespace Mergen.Core.Data
                 }
             }
 
+            _dataContext.Games.Add(game);
             return game;
         }
 
@@ -93,16 +98,23 @@ namespace Mergen.Core.Data
             var battle = await _dataContext.OneToOneBattles.Include(q => q.LastGame).ThenInclude(q => q.GameCategories)
                 .FirstAsync(q => q.Id == battleId, cancellationToken: cancellationToken);
 
-            if (battle.LastGame.PlayerId != playerId)
+            if (battle.LastGame.CurrentTurnPlayerId != playerId)
                 return Result.Error(StatusCode.Forbidden);
 
             if (battle.LastGame.GameCategories.All(q => q.CategoryId != categoryId))
                 return Result.Error(StatusCode.Forbidden);
 
             battle.LastGame.SelectedCategoryId = categoryId;
-            battle.LastGame.GameState = GameState.AnswerQuestions;
+            battle.LastGame.GameState = playerId == battle.Player1Id ? GameState.Player1AnswerQuestions : GameState.Player2AnswerQuestions;
 
-            // TODO: add random questions to battle
+            // add random questions to battle
+            var questions = await _dataContext.QuestionCategories.Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
+            var gameQuestions = questions.Select(q => new GameQuestion
+            {
+                GameId = battle.LastGameId.Value,
+                QuestionId = q.QuestionId
+            });
+            battle.LastGame.GameQuestions = gameQuestions.ToList();
 
             battle.BattleStateId = BattleStateIds.AnsweringQuestions;
 

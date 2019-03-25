@@ -13,10 +13,11 @@ namespace Mergen.Core.Data
             GameQuestions = new Collection<GameQuestion>();
         }
 
-        public long PlayerId { get; set; }
-        public Account Player { get; set; }
+        public long? CurrentTurnPlayerId { get; set; }
+        public Account CurrentTurnPlayer { get; set; }
 
         public long BattleId { get; set; }
+        public Battle Battle { get; set; }
 
         public long? SelectedCategoryId { get; set; }
         public Category SelectedCategory { get; set; }

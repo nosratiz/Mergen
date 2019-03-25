@@ -10,6 +10,7 @@ namespace Mergen.Game.Api.API.Battles
         public CategoryViewModel SelectedCategory { get; set; }
         public IEnumerable<CategoryViewModel> AvailableCategories { get; set; }
         public IEnumerable<QuestionViewModel> Questions { get; set; }
+        public int CurrentTurnPlayerId { get; set; }
 
         public static GameViewModel Map(Core.Data.Game game)
         {

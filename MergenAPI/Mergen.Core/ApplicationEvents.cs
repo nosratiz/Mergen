@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Mergen.Core.Data;
+using Mergen.Core.Entities.Base;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +25,8 @@ namespace Mergen.Core
                 context.Database.EnsureCreated();
                 try
                 {
-                    if (bool.TryParse(configuration["Data:InMemory"], out var inMemory) && inMemory)
+                    bool.TryParse(configuration["Data:InMemory"], out var inMemory);
+                    if (bool.TryParse(configuration["Data:Seed"], out var seed) && seed)
                     {
                         var dbSetType = typeof(DbSet<>);
                         var dbSets = typeof(DataContext).GetProperties().Where(t =>
@@ -41,6 +43,9 @@ namespace Mergen.Core
                             configSection.Bind(entity);
                             foreach (var ent in (IEnumerable) entity)
                             {
+                                if (!inMemory && ent is Entity e)
+                                    e.Id = 0;
+
                                 context.Add(ent);
                             }
                         }

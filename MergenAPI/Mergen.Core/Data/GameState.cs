@@ -3,7 +3,8 @@ namespace Mergen.Core.Data
     public enum GameState
     {
         SelectCategory,
-        AnswerQuestions,
+        Player1AnswerQuestions,
+        Player2AnswerQuestions,
         Completed
     }
 }

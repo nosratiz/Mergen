@@ -99,11 +99,33 @@ namespace Mergen.Game.Api.API.Battles
             return OkData(GameViewModel.Map(game));
         }
 
+        /*        [HttpPost]
+                [Route("battles/{battleId}/games")]
+                public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> NewGame(long battleId, long categoryId,
+                    bool customCategory, CancellationToken cancellationToken)
+                {
+                    var battle = await _dataContext.OneToOneBattles
+                        .Include(q => q.LastGame)
+                        .FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
+
+                    if (battle is null)
+                        return NotFound();
+
+                    if (battle.BattleStateId != BattleStateIds.SelectCategory)
+                        return BadRequest("invalid_battleState");
+
+                    if (battle.LastGame is null)
+
+                }*/
+
         [HttpPost]
         [Route("games/{gameId}/selectedCategory")]
         public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory(long gameId, long categoryId, bool customCategory, CancellationToken cancellationToken)
         {
-            var game = await _dataContext.Games.Include(q => q.GameCategories).ThenInclude(q => q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+            var game = await _dataContext.Games
+                .Include(q => q.Battle)
+                .Include(q => q.GameCategories).ThenInclude(q => q.Category)
+                .FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
             if (game == null)
                 return NotFound();
 
@@ -120,7 +142,7 @@ namespace Mergen.Game.Api.API.Battles
                         return BadRequest();
 
                     var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
-                        q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
 
                     if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.SelectCustomCategoryPrice)
                         return BadRequest("insufficient_funds",
@@ -135,7 +157,18 @@ namespace Mergen.Game.Api.API.Battles
                         return BadRequest();
                 }
 
+                game.GameState = game.CurrentTurnPlayerId == ((OneToOneBattle)game.Battle).Player1Id ? GameState.Player1AnswerQuestions : GameState.Player2AnswerQuestions;
                 game.SelectedCategoryId = categoryId;
+
+                // add random questions to battle
+                var questions = await _dataContext.QuestionCategories.Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
+                var gameQuestions = questions.Select(q => new GameQuestion
+                {
+                    GameId = game.Id,
+                    QuestionId = q.QuestionId
+                });
+                game.GameQuestions = gameQuestions.ToList();
+
                 await _dataContext.SaveChangesAsync(cancellationToken);
 
                 trans.Complete();
@@ -156,7 +189,7 @@ namespace Mergen.Game.Api.API.Battles
                     return NotFound();
 
                 var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
-                    q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
 
                 if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.RandomizeCategoryPrice)
                     return BadRequest("insufficient_funds",
@@ -197,16 +230,22 @@ namespace Mergen.Game.Api.API.Battles
             if (game == null)
                 return NotFound();
 
-            var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId, cancellationToken);
+            /*            if (game.CurrentTurnPlayerId != playerId)
+                            return BadRequest("invalid_turn");*/
+
+            var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId, cancellationToken);
             if (playerStat == null)
             {
                 playerStat = new AccountStatsSummary
                 {
-                    AccountId = game.PlayerId
+                    AccountId = game.CurrentTurnPlayerId.Value
                 };
 
                 _dataContext.AccountStatsSummaries.Add(playerStat);
             }
+
+            if (inputModel.Answers.Count() != game.GameQuestions.Count)
+                return BadRequest("invalid_answersCount");
 
             foreach (var answer in inputModel.Answers)
             {
@@ -215,12 +254,24 @@ namespace Mergen.Game.Api.API.Battles
                 if (gq == null)
                     return BadRequest("invalid_answers", "no such question in this game.");
 
-                if (gq.SelectedAnswer.HasValue)
-                    return BadRequest("invalid_answers", "question already answered.");
+                var selectedAnswer = answer.SelectedAnswer;
 
-                gq.SelectedAnswer = answer.SelectedAnswer;
+                if (game.GameState == GameState.Player1AnswerQuestions)
+                {
+                    if (gq.Player1SelectedAnswer.HasValue)
+                        return BadRequest("invalid_answers", "question already answered.");
 
-                if (gq.Question.CorrectAnswerNumber == gq.SelectedAnswer)
+                    gq.Player1SelectedAnswer = selectedAnswer;
+                }
+                else
+                {
+                    if (gq.Player2SelectedAnswer.HasValue)
+                        return BadRequest("invalid_answers", "question already answered.");
+
+                    gq.Player2SelectedAnswer = selectedAnswer;
+                }
+
+                if (gq.Question.CorrectAnswerNumber == selectedAnswer)
                 {
                     gq.Score = 1;
                     game.Score += 1;
@@ -228,7 +279,7 @@ namespace Mergen.Game.Api.API.Battles
                 else
                     gq.Score = 0;
 
-                switch (gq.SelectedAnswer)
+                switch (selectedAnswer)
                 {
                     case 1:
                         gq.Question.Answer1ChooseHistory++;
@@ -248,12 +299,12 @@ namespace Mergen.Game.Api.API.Battles
                 // Process Category stats for player
                 foreach (var category in gq.Question.QuestionCategories)
                 {
-                    var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.CategoryId == category.Id, cancellationToken);
+                    var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.CategoryId == category.Id, cancellationToken);
                     if (playerCategoryStat == null)
                     {
                         playerCategoryStat = new AccountCategoryStat
                         {
-                            AccountId = game.PlayerId,
+                            AccountId = game.CurrentTurnPlayerId.Value,
                             CategoryId = category.Id
                         };
 
@@ -266,7 +317,7 @@ namespace Mergen.Game.Api.API.Battles
 
                 if (answer.UsedAnswersHistoryHelper)
                 {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
                     if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AnswersHistoryHelperPrice)
                     {
                         // TODO: cheat detected
@@ -278,7 +329,7 @@ namespace Mergen.Game.Api.API.Battles
 
                 if (answer.UsedRemoveTwoAnswersHelper)
                 {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
                     if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.RemoveTwoAnswersHelperPrice)
                     {
                         // TODO: cheat detected
@@ -290,7 +341,7 @@ namespace Mergen.Game.Api.API.Battles
 
                 if (answer.UsedAskMergenHelper)
                 {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
                     if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AskMergenHelperPrice)
                     {
                         // TODO: cheat detected
@@ -301,7 +352,7 @@ namespace Mergen.Game.Api.API.Battles
                 }
             }
 
-            if (game.GameQuestions.All(q => q.SelectedAnswer.HasValue))
+            if (game.GameQuestions.All(q => q.Player1SelectedAnswer.HasValue && q.Player2SelectedAnswer.HasValue))
             {
                 game.GameState = GameState.Completed;
 
@@ -318,7 +369,7 @@ namespace Mergen.Game.Api.API.Battles
                     int player2Score = 0;
                     foreach (var battleGame in battle.Games)
                     {
-                        if (battleGame.PlayerId == battle.Player1Id)
+                        if (battleGame.CurrentTurnPlayerId == battle.Player1Id)
                         {
                             player1Score += battleGame.Score;
                         }
@@ -333,9 +384,21 @@ namespace Mergen.Game.Api.API.Battles
                 }
                 else
                 {
-                    var newGame = await _gamingService.CreateGameAsync(battle.Player1Id != game.PlayerId ? battle.Player1 : battle.Player2, cancellationToken);
+                    var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
+                    var newGame = await _gamingService.CreateGameAsync(battle, nextPlayer, cancellationToken);
                     battle.LastGame = newGame;
                 }
+            }
+            else
+            {
+                var battle = await _dataContext.OneToOneBattles
+                    .Include(q => q.Player1)
+                    .Include(q => q.Player2)
+                    .FirstOrDefaultAsync(q => q.Id == game.BattleId, cancellationToken);
+
+                var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
+                game.CurrentTurnPlayerId = nextPlayer?.Id;
+                game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameState.Player1AnswerQuestions : GameState.Player2AnswerQuestions;
             }
 
             await _dataContext.SaveChangesAsync(cancellationToken);

@@ -17,7 +17,7 @@ namespace Mergen.Core.Data
         public long? Player2Id { get; set; }
         public Account Player2 { get; set; }
         public int Round { get; set; }
-        public long LastGameId { get; set; }
+        public long? LastGameId { get; set; }
         public Game LastGame { get; set; }
 
         public long? WinnerPlayerId { get; set; }
@@ -27,5 +27,7 @@ namespace Mergen.Core.Data
         public ICollection<Game> Games { get; set; }
 
         public BattleStateIds BattleStateId { get; set; }
+
+        public int CurrentTurnPlayerId { get; set; }
     }
 }
