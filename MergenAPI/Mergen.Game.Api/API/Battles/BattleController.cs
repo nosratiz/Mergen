@@ -221,7 +221,10 @@ namespace Mergen.Game.Api.API.Battles
                 gq.SelectedAnswer = answer.SelectedAnswer;
 
                 if (gq.Question.CorrectAnswerNumber == gq.SelectedAnswer)
+                {
                     gq.Score = 1;
+                    game.Score += 1;
+                }
                 else
                     gq.Score = 0;
 
@@ -241,6 +244,8 @@ namespace Mergen.Game.Api.API.Battles
                         break;
                 }
 
+
+                // Process Category stats for player
                 foreach (var category in gq.Question.QuestionCategories)
                 {
                     var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.PlayerId && q.CategoryId == category.Id, cancellationToken);
@@ -309,6 +314,22 @@ namespace Mergen.Game.Api.API.Battles
                 if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameState.Completed))
                 {
                     battle.BattleStateId = BattleStateIds.Completed;
+                    int player1Score = 0;
+                    int player2Score = 0;
+                    foreach (var battleGame in battle.Games)
+                    {
+                        if (battleGame.PlayerId == battle.Player1Id)
+                        {
+                            player1Score += battleGame.Score;
+                        }
+                        else
+                        {
+                            player2Score += battleGame.Score;
+                        }
+                    }
+
+                    battle.Player1CorrectAnswersCount = player1Score;
+                    battle.Player2CorrectAnswersCount = player2Score;
                 }
                 else
                 {

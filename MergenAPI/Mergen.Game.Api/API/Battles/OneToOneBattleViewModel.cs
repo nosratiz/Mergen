@@ -1,4 +1,4 @@
-﻿using Mergen.Core.Data;
+using Mergen.Core.Data;
 
 namespace Mergen.Game.Api.API.Battles
 {

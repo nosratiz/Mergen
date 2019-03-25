@@ -25,5 +25,6 @@ namespace Mergen.Core.Data
         public ICollection<GameQuestion> GameQuestions { get; set; }
 
         public GameState GameState { get; set; }
+        public int Score { get; set; }
     }
 }
