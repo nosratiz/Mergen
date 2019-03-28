@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Mergen.Admin.Api.Exceptions;
-using Mergen.Admin.Api.ViewModels;
-using Mergen.Admin.Api.ViewModels.Errors;
+using Mergen.Api.Core.Exceptions;
+using Mergen.Api.Core.ViewModels;
+using Mergen.Api.Core.ViewModels.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;

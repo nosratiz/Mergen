@@ -43,5 +43,7 @@ namespace Mergen.Core.Data
         public DbSet<Setting> Settings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<AccountCategoryStat> AccountCategoryStats { get; set; }
+        public DbSet<FriendRequest> FriendRequests { get; set; }
+        public DbSet<AccountFriend> AccountFriends { get; set; }
     }
 }

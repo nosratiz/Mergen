@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mergen.Admin.Api.ViewModels;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 using Mergen.Core.Managers;
 

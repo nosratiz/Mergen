@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Mergen.Admin.Api.Exceptions;
+using Mergen.Api.Core.Exceptions;
 using Mergen.Core.Entities.Base;
 using Mergen.Core.Managers.Base;
 

@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using Mergen.Admin.Api.ViewModels.Errors;
+using Mergen.Api.Core.ViewModels.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 

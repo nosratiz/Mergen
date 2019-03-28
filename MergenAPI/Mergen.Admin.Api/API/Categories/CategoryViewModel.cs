@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Mergen.Admin.Api.ViewModels;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 
 namespace Mergen.Admin.Api.API.Categories

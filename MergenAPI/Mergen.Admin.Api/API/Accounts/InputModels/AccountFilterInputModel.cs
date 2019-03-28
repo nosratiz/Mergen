@@ -1,5 +1,5 @@
-using Mergen.Admin.Api.QueryProcessing;
-using Mergen.Admin.Api.Security.AuthorizationSystem;
+using Mergen.Api.Core.QueryProcessing;
+using Mergen.Api.Core.Security.AuthorizationSystem;
 using Mergen.Core.QueryProcessing;
 
 namespace Mergen.Admin.Api.API.Accounts.InputModels

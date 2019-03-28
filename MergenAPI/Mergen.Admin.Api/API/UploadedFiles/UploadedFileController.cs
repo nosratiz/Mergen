@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Admin.Api.Helpers;
-using Mergen.Admin.Api.ViewModels;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;

@@ -57,5 +57,18 @@ namespace Mergen.Core.Managers
                 return await dbc.AccountRoles.Where(q => q.AccountId == account.Id).Select(q => q.RoleId).ToListAsync(cancellationToken: cancellationToken);
             }
         }
+
+        public async Task<IEnumerable<(Account account, AccountStatsSummary stats)>> SearchAsync(string term, CancellationToken cancellationToken)
+        {
+            using (var dbc = CreateDbContext())
+            {
+                var result = await dbc.Accounts.Where(q => q.Nickname.Contains(term))
+                    .Join(dbc.AccountStatsSummaries, account => account.Id, summary => summary.AccountId,
+                        (account, summary) => new {account, summary})
+                    .ToListAsync(cancellationToken);
+
+                return result.Select(q => (q.account, q.summary));
+            }
+        }
     }
 }

@@ -1,11 +1,11 @@
-using Mergen.Admin.Api.CustomResult;
-using Mergen.Admin.Api.Security;
-using Mergen.Admin.Api.ViewModels;
+using Mergen.Api.Core.CustomResult;
+using Mergen.Api.Core.Security;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 using Mergen.Core.QueryProcessing;
 using Microsoft.AspNetCore.Mvc;
-using BadRequestResult = Mergen.Admin.Api.CustomResult.BadRequestResult;
-using NotFoundResult = Mergen.Admin.Api.CustomResult.NotFoundResult;
+using BadRequestResult = Mergen.Api.Core.CustomResult.BadRequestResult;
+using NotFoundResult = Mergen.Api.Core.CustomResult.NotFoundResult;
 
 namespace Mergen.Admin.Api.API
 {

@@ -55,6 +55,7 @@ namespace Mergen.Core
             services.AddSingleton<ShopItemManager>();
             services.AddSingleton<StatsManager>();
             services.AddSingleton<AccountItemManager>();
+            services.AddSingleton<AccountFriendManager>();
 
             services.AddScoped<GamingService>();
         }

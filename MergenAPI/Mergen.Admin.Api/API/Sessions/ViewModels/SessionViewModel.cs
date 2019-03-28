@@ -1,4 +1,4 @@
-using Mergen.Admin.Api.ViewModels;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 
 namespace Mergen.Admin.Api.API.Sessions.ViewModels
