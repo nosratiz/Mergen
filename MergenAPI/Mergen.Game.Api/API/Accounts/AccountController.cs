@@ -112,13 +112,7 @@ namespace Mergen.Game.Api.API.Accounts
             var friendRequest = await _friendRequestManager.GetExistingRequest(accountId, inputModel.FriendAccountId, cancellationToken);
 
             if (friendRequest != null)
-            {
-                if (friendRequest.StatusId == FriendRequestStatus.Pending)
-                    return BadRequest("already_exists", "Friend request already sent.");
-
-                if (friendRequest.StatusId == FriendRequestStatus.Rejected && friendRequest.RequestDateTime.AddDays(2) > DateTime.UtcNow)
-                    return BadRequest("rejected", "Friend request rejected.");
-            }
+                return BadRequest("already_exists", "Friend request already sent.");
 
             if (await _accountFriendManager.IsFriendAsync(accountId, inputModel.FriendAccountId, cancellationToken))
                 return BadRequest("already_friends", "Requested player is already in your friend list.");
@@ -144,12 +138,67 @@ namespace Mergen.Game.Api.API.Accounts
             return OkData(_friendRequestManager.GetAllAsync(filterInputModel, cancellationToken));
         }
 
-        [HttpPut]
-        [Route("friendrequets/{id}")]
-        public async Task<ActionResult> SetFriendRequestStatus([FromRoute] long id,
-            [FromBody] FriendRequestStatus newStatusId)
+        [HttpPost]
+        [Route("friendrequests/ignored")]
+        public async Task<IActionResult> IgnoreFriendRequest([FromBody] long friendRequestId,
+            CancellationToken cancellationToken)
         {
+            var friendRequest = await _friendRequestManager.GetAsync(friendRequestId, cancellationToken);
+            if (friendRequest == null)
+                return NotFound();
 
+            if (AccountId != friendRequest.ToAccountId)
+                return Forbidden();
+
+            if (friendRequest.StatusId != FriendRequestStatus.Pending)
+                return BadRequest("invalid_state", "friend request in invalid state");
+
+            friendRequest.StatusId = FriendRequestStatus.Ignored;
+            await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("friendrequests/cancelled")]
+        public async Task<IActionResult> CancelFriendRequest([FromBody] long friendRequestId,
+            CancellationToken cancellationToken)
+        {
+            var friendRequest = await _friendRequestManager.GetAsync(friendRequestId, cancellationToken);
+            if (friendRequest == null)
+                return NotFound();
+
+            if (AccountId != friendRequest.FromAccountId)
+                return Forbidden();
+
+            if (friendRequest.StatusId != FriendRequestStatus.Pending)
+                return BadRequest("invalid_state", "friend request in invalid state");
+
+            friendRequest.StatusId = FriendRequestStatus.Cancelled;
+            await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("friendrequests/cancelled")]
+        public async Task<IActionResult> AcceptFriendRequest([FromBody] long friendRequestId,
+            CancellationToken cancellationToken)
+        {
+            var friendRequest = await _friendRequestManager.GetAsync(friendRequestId, cancellationToken);
+            if (friendRequest == null)
+                return NotFound();
+
+            if (AccountId != friendRequest.ToAccountId)
+                return Forbidden();
+
+            if (friendRequest.StatusId != FriendRequestStatus.Pending)
+                return BadRequest("invalid_state", "friend request in invalid state");
+
+            friendRequest.StatusId = FriendRequestStatus.Accepted;
+            await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
+
+            return Ok();
         }
     }
 }

@@ -4,7 +4,7 @@ namespace Mergen.Core.Entities
     {
         Pending = 1,
         Accepted = 2,
-        Rejected = 3,
-        Ignored = 4
+        Ignored = 3,
+        Cancelled = 4
     }
 }

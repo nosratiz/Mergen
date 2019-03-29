@@ -19,7 +19,7 @@ namespace Mergen.Core.Managers
 
         public async Task<FriendRequest> GetExistingRequest(long accountId, long friendAccountId, CancellationToken cancellationToken)
         {
-            return await FirstOrDefaultAsync(q=>q.FromAccountId == accountId && q.ToAccountId == friendAccountId, cancellationToken);
+            return await FirstOrDefaultAsync(q => q.FromAccountId == accountId && q.ToAccountId == friendAccountId && q.StatusId == FriendRequestStatus.Pending, cancellationToken);
         }
     }
 }

@@ -56,11 +56,26 @@ namespace Mergen.Game.Api.API.Battles
 
         [HttpPost]
         [Route("accounts/{accountId}/onetoonebattles")]
-        public async Task<ActionResult<ApiResultViewModel<OneToOneBattleViewModel>>> StartRandomBattle(long accountId, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<OneToOneBattleViewModel>>> StartRandomBattle([FromRoute] long accountId, [FromBody] OneToOneBattleInputModel inputModel, CancellationToken cancellationToken)
         {
             var player1 = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == accountId, cancellationToken);
 
-            var battle = await _gamingService.StartRandomBattleAsync(player1, null, cancellationToken);
+            if (player1 == null)
+                return BadRequest("invalid_accountId", "Player1 account not found");
+
+            Account player2 = null;
+            if (inputModel.BattleInvitationId != null)
+            {
+                var battleInvitation = await _dataContext.BattleInvitations.FirstOrDefaultAsync(q => q.Id == inputModel.BattleInvitationId, cancellationToken);
+                if (battleInvitation == null)
+                    return BadRequest("invalid_battleInvitationId", "Invitation not found.");
+
+                battleInvitation.Status = BattleInvitationStatus.Accepted;
+
+                player2 = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == battleInvitation.InviterAccountId, cancellationToken);
+            }
+
+            var battle = await _gamingService.StartRandomBattleAsync(player1, player2, cancellationToken);
 
             return OkData(await _battleMapper.MapAsync(battle, cancellationToken));
         }
@@ -98,25 +113,6 @@ namespace Mergen.Game.Api.API.Battles
 
             return OkData(GameViewModel.Map(game));
         }
-
-        /*        [HttpPost]
-                [Route("battles/{battleId}/games")]
-                public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> NewGame(long battleId, long categoryId,
-                    bool customCategory, CancellationToken cancellationToken)
-                {
-                    var battle = await _dataContext.OneToOneBattles
-                        .Include(q => q.LastGame)
-                        .FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
-
-                    if (battle is null)
-                        return NotFound();
-
-                    if (battle.BattleStateId != BattleStateIds.SelectCategory)
-                        return BadRequest("invalid_battleState");
-
-                    if (battle.LastGame is null)
-
-                }*/
 
         [HttpPost]
         [Route("games/{gameId}/selectedCategory")]
@@ -405,12 +401,72 @@ namespace Mergen.Game.Api.API.Battles
             return Ok();
         }
 
-        /*[HttpPost]
-        [Route("accounts/{accountId}/onetoonebattleinvitations")]
-        public async Task<ApiResultViewModel<OneToOneBattle>> InvitePlayerToOneToOneBattle(
+        [HttpPost]
+        [Route("accounts/{accountId}/battleinvitations")]
+        public async Task<IActionResult> InvitePlayerToOneToOneBattle([FromRoute] long accountId, CancellationToken cancellationToken)
+        {
+            var battleInvitation = await _dataContext.BattleInvitations.FirstOrDefaultAsync(q => q.AccountId == accountId && q.InviterAccountId == AccountId, cancellationToken);
+            if (battleInvitation != null)
+                return BadRequest("duplicate_invitation", "Invitation already sent.");
+
+            battleInvitation = new BattleInvitation
+            {
+                InviterAccountId = AccountId,
+                AccountId = accountId,
+                DateTime = DateTime.UtcNow,
+                Status = BattleInvitationStatus.Pending
+            };
+
+            _dataContext.BattleInvitations.Add(battleInvitation);
+            await _dataContext.SaveChangesAsync(cancellationToken);
+
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("accounts/{accountId}/battleinvitations")]
+        public async Task<ActionResult<ApiResultViewModel<BattleInvitationViewModel>>> GetBattleInvitations([FromRoute] long accountId, CancellationToken cancellationToken)
+        {
+            var invitations = await _dataContext.BattleInvitations.Include(q => q.InviterAccount).Where(q => q.AccountId == accountId && q.Status == BattleInvitationStatus.Pending).ToListAsync(cancellationToken);
+            return OkData(BattleInvitationViewModel.MapAll(invitations));
+        }
+
+        [HttpPost]
+        [Route("battleinvitations/rejected")]
+        public async Task<IActionResult> RejectBattleInvitation([FromBody] long battleInvitationId,
             CancellationToken cancellationToken)
         {
+            return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Rejected, cancellationToken);
+        }
 
-        }*/
+        [HttpPost]
+        [Route("battleinvitations/cancelled")]
+        public async Task<IActionResult> CancelBattleInvitation([FromBody] long battleInvitationId,
+            CancellationToken cancellationToken)
+        {
+            return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Cancelled, cancellationToken);
+        }
+
+        [HttpPost]
+        [Route("battleinvitations/ignored")]
+        public async Task<IActionResult> IgnoreBattleInvitation([FromBody] long battleInvitationId,
+            CancellationToken cancellationToken)
+        {
+            return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Ignored, cancellationToken);
+        }
+
+        private async Task<IActionResult> ChangeBattleInvitationStatus(long battleInvitationId, BattleInvitationStatus status, CancellationToken cancellationToken)
+        {
+            var invitation = await _dataContext.BattleInvitations.FirstOrDefaultAsync(q => q.Id == battleInvitationId, cancellationToken);
+            if (invitation == null)
+                return NotFound();
+
+            if (invitation.Status != BattleInvitationStatus.Pending)
+                return BadRequest("invalid_state", "Invitation must be in pending state.");
+
+            invitation.Status = BattleInvitationStatus.Rejected;
+            await _dataContext.SaveChangesAsync(cancellationToken);
+            return Ok();
+        }
     }
 }
