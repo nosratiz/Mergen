@@ -30,4 +30,11 @@ namespace Mergen.Core.Data
 
         public int CurrentTurnPlayerId { get; set; }
     }
+
+    public class AccountCorrectAnswerSummary
+    {
+        public long AccountId { get; set; }
+        public long CorrectAnswersCount { get; set; }
+        public long BattlesCount { get; set; }
+    }
 }

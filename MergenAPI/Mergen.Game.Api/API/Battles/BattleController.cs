@@ -23,6 +23,14 @@ namespace Mergen.Game.Api.API.Battles
         private readonly BattleMapper _battleMapper;
         private readonly GameSettings _gameSettingsOptions;
 
+        private const int ExperienceBase = 10;
+        private const int WinExperienceMultiplier = 3;
+        private const int LoseExperienceMultiplier = 1;
+
+        private const int CoinBase = 10;
+        private const int WinCoinMultiplier = 2;
+        private const int LoseCoinMultiplier = 1;
+
         public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions)
         {
             _dataContext = dataContext;
@@ -360,23 +368,76 @@ namespace Mergen.Game.Api.API.Battles
 
                 if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameState.Completed))
                 {
+                    // Battle Completed
+
                     battle.BattleStateId = BattleStateIds.Completed;
-                    int player1Score = 0;
-                    int player2Score = 0;
+                    int player1CorrectAnswersCount = 0;
+                    int player2CorrectAnswersCount = 0;
                     foreach (var battleGame in battle.Games)
                     {
                         if (battleGame.CurrentTurnPlayerId == battle.Player1Id)
                         {
-                            player1Score += battleGame.Score;
+                            player1CorrectAnswersCount += battleGame.Score;
                         }
                         else
                         {
-                            player2Score += battleGame.Score;
+                            player2CorrectAnswersCount += battleGame.Score;
                         }
                     }
 
-                    battle.Player1CorrectAnswersCount = player1Score;
-                    battle.Player2CorrectAnswersCount = player2Score;
+                    battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
+                    battle.Player2CorrectAnswersCount = player2CorrectAnswersCount;
+                    battle.WinnerPlayerId = player1CorrectAnswersCount > player2CorrectAnswersCount ? battle.Player1Id : battle.Player2Id;
+
+                    var playersStats = await _dataContext.AccountStatsSummaries
+                        .Where(q => q.AccountId == battle.Player1Id || q.AccountId == battle.Player2Id)
+                        .ToDictionaryAsync(q => q.AccountId, q => q, cancellationToken);
+
+                    var player1Stats = playersStats[battle.Player1Id];
+                    var player2Stats = playersStats[battle.Player2Id.Value];
+
+                    player1Stats.TotalBattlesPlayed += 1;
+                    player2Stats.TotalBattlesPlayed += 1;
+
+                    if (battle.WinnerPlayerId == battle.Player1Id)
+                    {
+                        player1Stats.WinCount += 1;
+                        player2Stats.LoseCount += 1;
+
+                        if (player1CorrectAnswersCount == 15)
+                            player1Stats.AceWinCount += 1;
+
+                        // Experience for win
+                        player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
+                        player1Stats.Coins += player1CorrectAnswersCount + CoinBase * WinCoinMultiplier;
+
+                        // Experience for lose
+                        player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
+                        player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
+
+                    }
+                    else
+                    {
+                        player1Stats.LoseCount += 1;
+                        player2Stats.WinCount += 1;
+
+                        if (player2CorrectAnswersCount == 15)
+                            player2Stats.AceWinCount += 1;
+
+                        // Experience for win
+                        player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
+                        player2Stats.Coins += player2CorrectAnswersCount + CoinBase * WinCoinMultiplier;
+
+                        // Experience for lose
+                        player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
+                        player1Stats.Coins += player1CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
+                    }
+
+                    player1Stats.WinRatio = player1Stats.WinCount / (float)player1Stats.TotalBattlesPlayed;
+                    player2Stats.WinRatio = player2Stats.WinCount / (float)player2Stats.TotalBattlesPlayed;
+
+                    player1Stats.LoseRatio = player1Stats.LoseCount / (float)player1Stats.TotalBattlesPlayed;
+                    player2Stats.LoseRatio = player2Stats.LoseCount / (float)player2Stats.TotalBattlesPlayed;
                 }
                 else
                 {
