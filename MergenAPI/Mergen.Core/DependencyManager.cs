@@ -37,8 +37,21 @@ namespace Mergen.Core
                 services.AddEntityFrameworkInMemoryDatabase()
                     .AddDbContext<DataContext>(options => options.UseInMemoryDatabase("Mergen"));
             else
-                services.AddEntityFrameworkSqlServer().AddDbContext<DataContext>(options =>
-                    options.UseSqlServer(configuration.GetConnectionString("Mergen")));
+            {
+                var provider = configuration["Data:Provider"]?.ToLower();
+                switch (provider)
+                {
+                    case "sqlite":
+                        services.AddEntityFrameworkSqlite().AddDbContext<DataContext>(options =>
+                            options.UseSqlite(configuration.GetConnectionString("Mergen")));
+                        break;
+                    case "sqlserver":
+                    default:
+                        services.AddEntityFrameworkSqlServer().AddDbContext<DataContext>(options =>
+                            options.UseSqlServer(configuration.GetConnectionString("Mergen")));
+                        break;
+                }
+            }
 
             services.AddSingleton<DbContextFactory>();
         }
