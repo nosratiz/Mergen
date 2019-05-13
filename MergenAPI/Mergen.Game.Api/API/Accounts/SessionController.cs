@@ -27,7 +27,7 @@ namespace Mergen.Game.Api.API.Accounts
         }
 
         [HttpPost]
-        [Route("accounts")]
+        [Route("sessions")]
         public async Task<ActionResult<ApiResultViewModel<SessionViewModel>>> Login([FromBody] LoginInputModel inputModel,
             CancellationToken cancellationToken)
         {
