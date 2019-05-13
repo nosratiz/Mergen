@@ -181,7 +181,7 @@ namespace Mergen.Game.Api.API.Accounts
         }
 
         [HttpPost]
-        [Route("friendrequests/cancelled")]
+        [Route("friendrequests/acceoted")]
         public async Task<IActionResult> AcceptFriendRequest([FromBody] long friendRequestId,
             CancellationToken cancellationToken)
         {
