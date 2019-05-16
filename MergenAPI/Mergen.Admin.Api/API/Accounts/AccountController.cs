@@ -38,6 +38,7 @@ namespace Mergen.Admin.Api.API.Accounts
         private AccountItemManager _accountItemManager;
         private ShopItemManager _shopItemManager;
         private readonly IImageProcessingService _imageProcessingService;
+        private readonly StatsManager _statsManager;
 
         public AccountController(AccountManager accountManager, IEmailService emailService,
             FileManager fileManager,
@@ -51,7 +52,8 @@ namespace Mergen.Admin.Api.API.Accounts
             SessionManager sessionManager,
             AccountItemManager accountItemManager,
             ShopItemManager shopItemManager,
-            IImageProcessingService imageProcessingService)
+            IImageProcessingService imageProcessingService,
+            StatsManager statsManager)
         {
             _accountManager = accountManager;
             _emailService = emailService;
@@ -60,6 +62,7 @@ namespace Mergen.Admin.Api.API.Accounts
             _accountItemManager = accountItemManager;
             _shopItemManager = shopItemManager;
             _imageProcessingService = imageProcessingService;
+            _statsManager = statsManager;
             _emailVerificationOptions = emailVerificationOptions.Value;
             _resetPasswordOptions = resetPasswordOptions.Value;
         }
@@ -90,6 +93,12 @@ namespace Mergen.Admin.Api.API.Accounts
             {
                 account = await _accountManager.SaveAsync(account, cancellationToken);
                 await _accountManager.UpdateRolesAsync(account, inputModel.RoleIds.Select(rid => rid.ToLong()), cancellationToken);
+
+                var accountStats = new AccountStatsSummary
+                {
+                    AccountId = account.Id
+                };
+                await _statsManager.SaveAsync(accountStats, cancellationToken);
 
                 transaction.Complete();
             }

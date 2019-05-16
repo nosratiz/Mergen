@@ -45,6 +45,12 @@ namespace Mergen.Game.Api.API.Accounts
             account.Timezone = "Asia/Tehran";
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
+            var accountStats = new AccountStatsSummary
+            {
+                AccountId = account.Id
+            };
+            await _statsManager.SaveAsync(accountStats, cancellationToken);
+
             return CreatedData(AccountViewModel.Map(account));
         }
 
