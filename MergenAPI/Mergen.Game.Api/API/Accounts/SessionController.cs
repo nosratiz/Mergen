@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,7 +40,8 @@ namespace Mergen.Game.Api.API.Accounts
 
             var token = _tokenGenerator.GenerateToken(TimeSpan.FromDays(365),
                 new Claim(JwtRegisteredClaimNames.Jti, account.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, account.Email));
+                new Claim(JwtRegisteredClaimNames.Sub, account.Email),
+                new Claim("Timezone", account.Timezone));
 
             var session = new Session
             {

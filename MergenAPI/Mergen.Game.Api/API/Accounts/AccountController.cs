@@ -42,6 +42,7 @@ namespace Mergen.Game.Api.API.Accounts
             account.Email = inputModel.Email;
             account.PasswordHash = PasswordHash.CreateHash(inputModel.Password);
             account.StatusId = AccountStatusIds.Active;
+            account.Timezone = "Asia/Tehran";
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
             return CreatedData(AccountViewModel.Map(account));
