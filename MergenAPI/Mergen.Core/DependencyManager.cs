@@ -69,6 +69,7 @@ namespace Mergen.Core
             services.AddSingleton<StatsManager>();
             services.AddSingleton<AccountItemManager>();
             services.AddSingleton<AccountFriendManager>();
+            services.AddSingleton<FriendRequestManager>();
 
             services.AddScoped<GamingService>();
         }
