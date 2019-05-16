@@ -7,14 +7,14 @@ namespace Mergen.Game.Api.API.Accounts
     public class ProfileViewModel
     {
         public string Name { get; set; }
-        public int Level { get; set; }
+        public int? Level { get; set; }
 
         public static ProfileViewModel Map(Account account, AccountStatsSummary stats)
         {
             return new ProfileViewModel
             {
                 Name = account.Nickname,
-                Level = stats.Level
+                Level = stats?.Level
             };
         }
 
