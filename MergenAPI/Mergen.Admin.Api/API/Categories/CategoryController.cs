@@ -36,7 +36,7 @@ namespace Mergen.Admin.Api.API.Categories
             CancellationToken cancellationToken)
         {
             var data = await _categoryManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
-            return OkData(data);
+            return OkData(CategoryViewModel.Map(data));
         }
 
         [HttpPost]
@@ -55,7 +55,7 @@ namespace Mergen.Admin.Api.API.Categories
 
             item = await _categoryManager.SaveAsync(item, cancellationToken);
 
-            return OkData(item);
+            return OkData(CategoryViewModel.Map(item));
         }
 
         [HttpPut]
@@ -73,7 +73,7 @@ namespace Mergen.Admin.Api.API.Categories
 
             item = await _categoryManager.SaveAsync(item, cancellationToken);
 
-            return OkData(item);
+            return OkData(CategoryViewModel.Map(item));
         }
 
         [HttpDelete]
@@ -84,7 +84,7 @@ namespace Mergen.Admin.Api.API.Categories
             var item = await _categoryManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
             await _categoryManager.DeleteAsync(item, cancellationToken);
 
-            return OkData(item);
+            return Ok();
         }
     }
 }
