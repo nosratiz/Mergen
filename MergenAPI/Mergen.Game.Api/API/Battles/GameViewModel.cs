@@ -29,6 +29,9 @@ namespace Mergen.Game.Api.API.Battles
     public class CategoryViewModel : EntityViewModel
     {
         public string Title { get; set; }
+        public string IconFileId { get; set; }
+        public string CoverImageFileId { get; set; }
+        public string Description { get; set; }
 
         public static CategoryViewModel Map(Category category)
         {
