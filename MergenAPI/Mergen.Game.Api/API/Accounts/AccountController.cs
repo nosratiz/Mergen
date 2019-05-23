@@ -96,10 +96,10 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/profiles")]
-        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts([FromQuery] string term,
-            CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts([FromQuery] string term, [FromQuery]int page = 1, int pageSize = 30,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
-            var accounts = await _accountManager.SearchAsync(term, cancellationToken);
+            var accounts = await _accountManager.SearchAsync(term, page, pageSize, cancellationToken);
             return OkData(ProfileViewModel.Map(accounts));
         }
 

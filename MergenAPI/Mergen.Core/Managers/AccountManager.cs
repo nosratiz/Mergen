@@ -58,16 +58,22 @@ namespace Mergen.Core.Managers
             }
         }
 
-        public async Task<IEnumerable<(Account account, AccountStatsSummary stats)>> SearchAsync(string term, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(Account account, AccountStatsSummary stats)>> SearchAsync(string term, int page = 1, int pageSize = 30, CancellationToken cancellationToken = default)
         {
             using (var dbc = CreateDbContext())
             {
-                var result = await dbc.Accounts.Where(q => q.Nickname.Contains(term))
-                    .Join(dbc.AccountStatsSummaries, account => account.Id, summary => summary.AccountId,
-                        (account, summary) => new {account, summary})
-                    .ToListAsync(cancellationToken);
+                //var result = await dbc.Accounts.Where(q => q.Nickname.Contains(term))
+                //    .Join(dbc.AccountStatsSummaries, account => account.Id, summary => summary.AccountId,
+                //        (account, summary) => new {account, summary})
+                //    .ToListAsync(cancellationToken);
 
-                return result.Select(q => (q.account, q.summary));
+                var query = from acc in dbc.Accounts
+                    join statsSummary in dbc.AccountStatsSummaries on acc.Id equals statsSummary.AccountId
+                        into statSummaries
+                    from stats in statSummaries.DefaultIfEmpty()
+                    select new {acc, stats};
+
+                return (await query.Skip((page - 1) * pageSize).Take(page * pageSize).ToListAsync(cancellationToken)).Select(q => (q.acc, q.stats));
             }
         }
     }
