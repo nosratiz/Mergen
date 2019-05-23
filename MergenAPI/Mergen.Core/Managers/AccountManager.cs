@@ -76,5 +76,15 @@ namespace Mergen.Core.Managers
                 return (await query.Skip((page - 1) * pageSize).Take(page * pageSize).ToListAsync(cancellationToken)).Select(q => (q.acc, q.stats));
             }
         }
+
+        public async Task<Account> FindByNicknameAsync(string nickname, CancellationToken cancellationToken)
+        {
+            return await FirstOrDefaultAsync(q => q.Nickname == nickname, cancellationToken);
+        }
+
+        public async Task<Account> FindByPhoneNumber(string phoneNumber, CancellationToken cancellationToken)
+        {
+            return await FirstOrDefaultAsync(q => q.PhoneNumber == phoneNumber, cancellationToken);
+        }
     }
 }

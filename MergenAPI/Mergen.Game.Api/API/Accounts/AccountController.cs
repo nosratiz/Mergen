@@ -43,6 +43,9 @@ namespace Mergen.Game.Api.API.Accounts
             account.PasswordHash = PasswordHash.CreateHash(inputModel.Password);
             account.StatusId = AccountStatusIds.Active;
             account.Timezone = "Asia/Tehran";
+            account.ReceiveNotifications = true;
+            account.SearchableByEmailAddressOrUsername = true;
+            account.FriendsOnlyBattleInvitations = false;
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
             var accountStats = new AccountStatsSummary
@@ -52,14 +55,6 @@ namespace Mergen.Game.Api.API.Accounts
             await _statsManager.SaveAsync(accountStats, cancellationToken);
 
             return CreatedData(AccountViewModel.Map(account));
-        }
-
-        [HttpGet]
-        [Route("accounts/{accountId}")]
-        public async Task<ActionResult<ApiResultViewModel<AccountViewModel>>> GetAccountById([FromRoute] int accountId,
-            CancellationToken cancellationToken)
-        {
-            return OkData(AccountViewModel.Map(await _accountManager.GetAsync(accountId, cancellationToken)));
         }
 
         [HttpGet]
@@ -206,6 +201,76 @@ namespace Mergen.Game.Api.API.Accounts
             await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
 
             return Ok();
+        }
+
+        [HttpGet]
+        [Route("accounts/{accountId}")]
+        public async Task<ActionResult<AccountViewModel>> GetAccountById([FromRoute]string accountId, CancellationToken cancellationToken)
+        {
+            var accId = int.Parse(accountId);
+
+            if (AccountId != accId)
+                return Forbidden();
+
+            var account = await _accountManager.GetAsync(accId, cancellationToken);
+            if (account == null)
+                return NotFound();
+
+            return OkData(AccountViewModel.Map(account));
+        }
+
+        [HttpPut]
+        [Route("accounts/{accountId}")]
+        public async Task<ActionResult<AccountViewModel>> UpdateAccount([FromRoute] string accountId, [FromBody] AccountUpdateInputModel input, CancellationToken cancellationToken)
+        {
+            var accId = int.Parse(accountId);
+
+            if (AccountId != accId)
+                return Forbidden();
+
+            var account = await _accountManager.GetAsync(accId, cancellationToken);
+            if (account == null)
+                return NotFound();
+
+            if (account.Nickname != input.Nickname)
+            {
+                var existingAccountByUsername = await _accountManager.FindByNicknameAsync(input.Nickname, cancellationToken);
+                if (existingAccountByUsername != null)
+                    return BadRequest("duplicate_username", "Another account exists using the same entered username.");
+            }
+
+            if (account.Email != input.Email)
+            {
+                var existingAccountByEmail = await _accountManager.FindByEmailAsync(input.Email, cancellationToken);
+                if (existingAccountByEmail != null)
+                    return BadRequest("duplicate_email", "Another account exists using the entered email address.");
+
+                account.IsEmailVerified = false;
+            }
+
+            if (account.PhoneNumber != input.PhoneNumber)
+            {
+                var existingAccountByPhoneNumber = await _accountManager.FindByPhoneNumber(input.PhoneNumber, cancellationToken);
+                if (existingAccountByPhoneNumber != null)
+                    return BadRequest("duplicate_phoneNumber", "Another account exists using the entered phone number.");
+
+                account.IsPhoneNumberVerified = false;
+            }
+
+            account.Nickname = input.Nickname;
+            account.FirstName = input.FirstName;
+            account.LastName = input.LastName;
+            account.GenderId = input.GenderId != null && int.TryParse(input.GenderId, out var genderId) ? genderId : (int?) null;
+            account.BirthDate = input.BirthDate;
+            account.PhoneNumber = input.PhoneNumber;
+            account.Email = input.Email;
+            account.ReceiveNotifications = input.ReceiveNotifications;
+            account.SearchableByEmailAddressOrUsername = input.SearchableByEmailAddressOrUsername;
+            account.FriendsOnlyBattleInvitations = input.FriendsOnlyBattleInvitations;
+
+            account = await _accountManager.SaveAsync(account, cancellationToken);
+
+            return OkData(AccountViewModel.Map(account));
         }
     }
 }

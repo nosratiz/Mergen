@@ -88,6 +88,9 @@ namespace Mergen.Admin.Api.API.Accounts
             account.IsEmailVerified = inputModel.IsEmailVerified;
             account.IsPhoneNumberVerified = inputModel.IsPhoneNumberVerified;
             account.Timezone = "Asia/Tehran";
+            account.ReceiveNotifications = true;
+            account.SearchableByEmailAddressOrUsername = true;
+            account.FriendsOnlyBattleInvitations = false;
 
             using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {

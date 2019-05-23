@@ -42,6 +42,9 @@ namespace Mergen.Core.Entities
         public string ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordTokenGenerationTime { get; set; }
         public string Timezone { get; set; }
+        public bool ReceiveNotifications { get; set; }
+        public bool SearchableByEmailAddressOrUsername { get; set; }
+        public bool FriendsOnlyBattleInvitations { get; set; }
 
 
         // Cache Items

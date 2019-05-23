@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mergen.Core.Entities;
@@ -24,6 +24,9 @@ namespace Mergen.Game.Api.API.Accounts
         public string Timezone { get; set; }
         public IEnumerable<string> AvatarItemIds { get; set; }
         public IEnumerable<string> RoleIds { get; set; }
+        public bool ReceiveNotifications { get; set; }
+        public bool SearchableByEmailAddressOrUsername { get; set; }
+        public bool FriendsOnlyBattleInvitations { get; set; }
 
         public static AccountViewModel Map(Account account)
         {
@@ -45,6 +48,9 @@ namespace Mergen.Game.Api.API.Accounts
             model.Timezone = account.Timezone;
             model.AvatarItemIds = account.AvatarItemIds != null ? JsonConvert.DeserializeObject<long[]>(account.AvatarItemIds).Select(q => q.ToString()) : new string[0];
             model.RoleIds = account.RoleIds != null ? JsonConvert.DeserializeObject<long[]>(account.RoleIds).Select(q => q.ToString()) : new string[0];
+            model.ReceiveNotifications = account.ReceiveNotifications;
+            model.SearchableByEmailAddressOrUsername = account.SearchableByEmailAddressOrUsername;
+            model.FriendsOnlyBattleInvitations = account.FriendsOnlyBattleInvitations;
             return model;
         }
 

@@ -36,7 +36,7 @@ namespace Mergen.Game.Api.API.Accounts
                 return BadRequest("invalid_email", "Account not found");
 
             if (!PasswordHash.ValidatePassword(inputModel.Password, account.PasswordHash))
-                return BadRequest("invalid_username_or_password", "Invalid Username or Password!");
+                return BadRequest("invalid_username_or_password", "Invalid Nickname or Password!");
 
             var token = _tokenGenerator.GenerateToken(TimeSpan.FromDays(365),
                 new Claim(JwtRegisteredClaimNames.Jti, account.Id.ToString()),
