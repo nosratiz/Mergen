@@ -8,7 +8,7 @@ namespace Mergen.Core.EntityIds
 {
     public enum CategoryStatusIds
     {
-        Enabled,
-        Disabled
+        Enabled = 1,
+        Disabled = 2
     }
 }
