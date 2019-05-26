@@ -67,7 +67,7 @@ namespace Mergen.Core.Managers
                 //        (account, summary) => new {account, summary})
                 //    .ToListAsync(cancellationToken);
 
-                var query = from acc in dbc.Accounts
+                var query = from acc in dbc.Accounts where acc.Nickname != null && acc.SearchableByEmailAddressOrUsername == true
                     join statsSummary in dbc.AccountStatsSummaries on acc.Id equals statsSummary.AccountId
                         into statSummaries
                     from stats in statSummaries.DefaultIfEmpty()
