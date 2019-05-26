@@ -6,6 +6,7 @@ namespace Mergen.Game.Api.API.Accounts
 {
     public class ProfileViewModel
     {
+        public string AccountId { get; set; }
         public string Name { get; set; }
         public int? Level { get; set; }
 
@@ -13,6 +14,7 @@ namespace Mergen.Game.Api.API.Accounts
         {
             return new ProfileViewModel
             {
+                AccountId = account.Id.ToString(),
                 Name = account.Nickname,
                 Level = stats?.Level
             };
