@@ -5,11 +5,14 @@ using System.Threading.Tasks;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
+using Mergen.Core.Options;
 using Mergen.Core.QueryProcessing;
 using Mergen.Core.Security;
 using Mergen.Core.Services;
 using Mergen.Game.Api.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Mergen.Game.Api.API.Accounts
 {
@@ -260,7 +263,7 @@ namespace Mergen.Game.Api.API.Accounts
             account.Nickname = input.Nickname;
             account.FirstName = input.FirstName;
             account.LastName = input.LastName;
-            account.GenderId = input.GenderId != null && int.TryParse(input.GenderId, out var genderId) ? genderId : (int?) null;
+            account.GenderId = input.GenderId != null && int.TryParse(input.GenderId, out var genderId) ? genderId : (int?)null;
             account.BirthDate = input.BirthDate;
             account.PhoneNumber = input.PhoneNumber;
             account.Email = input.Email;
@@ -271,6 +274,89 @@ namespace Mergen.Game.Api.API.Accounts
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
             return OkData(AccountViewModel.Map(account));
+        }
+
+
+        [HttpGet]
+        [Route("accounts/resetpasswordrequests/{token}")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResultViewModel<ResetPasswordRequestViewModel>>> GetResetPasswordRequest(
+            [FromRoute]string token, [FromServices]IOptions<ResetPasswordOptions> options,
+            CancellationToken cancellationToken)
+        {
+            var existingAccount = await _accountManager.FindByResetPasswordTokenAsync(token, cancellationToken);
+            if (existingAccount == null)
+                return BadRequest("invalid_code", "Link is not valid.");
+
+            if (existingAccount.ResetPasswordTokenGenerationTime?.Add(options.Value.ExpiresAfter) <
+                DateTime.UtcNow)
+                return BadRequest("expired_code", "Link is expired.");
+
+            return OkData(new ResetPasswordRequestViewModel
+            {
+                AccountId = existingAccount.Id.ToString()
+            });
+        }
+
+        [HttpPost]
+        [Route("accounts/resetpasswordrequests")]
+        [AllowAnonymous]
+        public async Task<ActionResult<ApiResultViewModel<ResetPasswordRequestViewModel>>> ResetPasswordRequest(
+            [FromBody]ResetPasswordRequestInputModel inputModel,[FromServices] IEmailService emailService, CancellationToken cancellationToken)
+        {
+            var existingAccount = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
+            if (existingAccount == null)
+                return BadRequest("account_not_found", "Account not found.");
+
+            await emailService.SendResetPasswordLink(existingAccount, cancellationToken);
+
+            return CreatedData(new ResetPasswordRequestViewModel
+            {
+                AccountId = existingAccount.Id.ToString()
+            });
+        }
+
+        [HttpPut]
+        [Route("accounts/{account_id}/resetpassword")]
+        [AllowAnonymous]
+        public async Task<ActionResult> ResetPassword(ResetPasswordInputModel inputModel,
+            CancellationToken cancellationToken)
+        {
+            var existingAccount = await _accountManager.GetAsync(int.Parse(inputModel.AccountId), cancellationToken);
+            if (existingAccount == null)
+                return BadRequest("invalid_account_id", "Account not found.");
+
+            if (existingAccount.ResetPasswordToken != inputModel.Token)
+                return BadRequest("invalid_code", "Link is not valid.");
+
+            if (existingAccount.ResetPasswordTokenGenerationTime?.AddHours(48) < DateTime.UtcNow)
+                return BadRequest("expired_code", "Link is expired.");
+
+            existingAccount.PasswordHash = PasswordHash.CreateHash(inputModel.NewPassword);
+            existingAccount.ResetPasswordToken = null;
+            existingAccount.ResetPasswordTokenGenerationTime = null;
+            await _accountManager.SaveAsync(existingAccount, cancellationToken);
+
+            return Ok();
+        }
+
+        [HttpPut]
+        [Route("accounts/{accountId}/password")]
+        [AllowAnonymous]
+        public async Task<ActionResult> ChangePasswordAsync(ChangePasswordInputModel inputModel,
+            CancellationToken cancellationToken)
+        {
+            var account = await _accountManager.GetAsync(int.Parse(inputModel.AccountId), cancellationToken);
+            if (account == null)
+                return BadRequest("account_notfound", "Account not found.");
+
+            if (!PasswordHash.ValidatePassword(inputModel.OldPassword, account.PasswordHash))
+                return BadRequest("invalid_oldPassword", "Old password is invalid");
+
+            account.PasswordHash = PasswordHash.CreateHash(inputModel.NewPassword);
+            await _accountManager.SaveAsync(account, cancellationToken);
+
+            return Ok();
         }
     }
 }
