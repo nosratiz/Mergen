@@ -2,9 +2,9 @@ namespace Mergen.Core.Data
 {
     public enum BattleStateIds
     {
-        SelectCategory,
-        AnsweringQuestions,
-        Completed,
-        Expired
+        SelectCategory = 1,
+        AnsweringQuestions = 2,
+        Completed = 3,
+        Expired = 4
     }
 }

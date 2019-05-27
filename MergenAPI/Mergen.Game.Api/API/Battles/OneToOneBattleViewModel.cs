@@ -12,6 +12,6 @@ namespace Mergen.Game.Api.API.Battles
         public long LastGameId { get; set; }
         public long? WinnerPlayerId { get; set; }
 
-        public BattleStateIds BattleStateIds { get; set; }
+        public BattleStateIds BattleStateId { get; set; }
     }
 }
