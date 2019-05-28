@@ -76,6 +76,7 @@ namespace Mergen.Admin.Api.API.Questions
 
         [HttpPost]
         [Route("questionfiles")]
+        [DisableRequestSizeLimit]
         public async Task<ActionResult<ApiResultViewModel<QuestionViewModel>>> ImportQuestionsFromFile(
             [FromForm]QuestionFileImportInputModel inputModel, CancellationToken cancellationToken)
         {
