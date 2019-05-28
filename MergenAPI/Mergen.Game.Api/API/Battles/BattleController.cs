@@ -136,7 +136,7 @@ namespace Mergen.Game.Api.API.Battles
             if (game.SelectedCategoryId != null)
                 return BadRequest("already_selected");
 
-            using (var trans = new TransactionScope())
+            using (var trans = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 Category category;
                 if (customCategory)
@@ -186,7 +186,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> RandomizeGameCategories(long gameId,
             CancellationToken cancellationToken)
         {
-            using (var tran = new TransactionScope())
+            using (var tran = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 var game = await _dataContext.Games.Include(q => q.GameCategories).ThenInclude(q => q.Category).FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
                 if (game == null)

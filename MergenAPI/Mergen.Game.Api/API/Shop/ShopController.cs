@@ -134,7 +134,7 @@ namespace Mergen.Game.Api.API.Shop
         [Route("accounts/{accountId}/items")]
         public async Task<ActionResult> PurchaseItemByCoin(long accountId, [FromBody]PurchaseByCoinInputModel inputModel, CancellationToken cancellationToken)
         {
-            using (var trans = new TransactionScope())
+            using (var trans = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
                 var account =
                     await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == accountId, cancellationToken);
