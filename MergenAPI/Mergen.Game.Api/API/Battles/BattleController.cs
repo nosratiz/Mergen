@@ -354,6 +354,18 @@ namespace Mergen.Game.Api.API.Battles
 
                     accountCoin.Quantity -= _gameSettingsOptions.AskMergenHelperPrice;
                 }
+
+                if (answer.TimeExtenderHelperUsageCount > 0)
+                {
+                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount)
+                    {
+                        // TODO: cheat detected
+                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                    }
+
+                    accountCoin.Quantity -= _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount;
+                }
             }
 
             if (game.GameQuestions.All(q => q.Player1SelectedAnswer.HasValue && q.Player2SelectedAnswer.HasValue))

@@ -13,5 +13,6 @@ namespace Mergen.Core.Options
         public int RemoveTwoAnswersHelperPrice { get; set; }
         public int AnswersHistoryHelperPrice { get; set; }
         public int AskMergenHelperPrice { get; set; }
+        public int TimeExtenderHelperPrice { get; set; }
     }
 }
