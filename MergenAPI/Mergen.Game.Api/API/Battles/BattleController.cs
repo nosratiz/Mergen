@@ -52,7 +52,7 @@ namespace Mergen.Game.Api.API.Battles
 
         [HttpGet]
         [Route("accounts/{accountId}/recentbattles")]
-        public async Task<ActionResult<ApiResultViewModel<IEnumerable<BattleViewModel>>>> GetRecentBattles(long accountId, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetRecentBattles(long accountId, CancellationToken cancellationToken)
         {
             var recentBattles = await _dataContext.OneToOneBattles
                 .Where(q => (q.Player1Id == accountId || q.Player2Id == accountId) &&
