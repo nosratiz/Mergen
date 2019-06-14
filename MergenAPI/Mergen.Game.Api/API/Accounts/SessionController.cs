@@ -32,7 +32,7 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var account = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
-            if (account == null)
+            if (account == null || account.IsArchived)
                 return BadRequest("invalid_email", "Account not found");
 
             if (!PasswordHash.ValidatePassword(inputModel.Password, account.PasswordHash))

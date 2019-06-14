@@ -27,8 +27,9 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly AccountFriendManager _accountFriendManager;
         private readonly FriendRequestManager _friendRequestManager;
         private readonly DataContext _dataContext;
+        private SessionManager _sessionManager;
 
-        public AccountController(AccountManager accountManager, IFileService fileService, StatsManager statsManager, AccountFriendManager accountFriendManager, FriendRequestManager friendRequestManager, DataContext dataContext)
+        public AccountController(AccountManager accountManager, IFileService fileService, StatsManager statsManager, AccountFriendManager accountFriendManager, FriendRequestManager friendRequestManager, DataContext dataContext, SessionManager sessionManager)
         {
             _accountManager = accountManager;
             _fileService = fileService;
@@ -36,6 +37,7 @@ namespace Mergen.Game.Api.API.Accounts
             _accountFriendManager = accountFriendManager;
             _friendRequestManager = friendRequestManager;
             _dataContext = dataContext;
+            _sessionManager = sessionManager;
         }
 
         [HttpPost]
@@ -362,6 +364,23 @@ namespace Mergen.Game.Api.API.Accounts
             account.PasswordHash = PasswordHash.CreateHash(inputModel.NewPassword);
             await _accountManager.SaveAsync(account, cancellationToken);
 
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("accounts/deactivated")]
+        public async Task<ActionResult> DeactivateAccountAsync(DeactivateAccountInputModel inputModel, CancellationToken cancellationToken)
+        {
+            var account = await _accountManager.GetAsync(int.Parse(inputModel.AccountId), cancellationToken);
+            if (account == null)
+                return BadRequest("account_notfound", "Account not found.");
+
+            if (account.Id != AccountId)
+                return Forbidden();
+
+            await _sessionManager.DeleteByAccountIdAsync(account.Id, cancellationToken);
+
+            await _accountManager.ArchiveAsync(account, cancellationToken);
             return Ok();
         }
     }
