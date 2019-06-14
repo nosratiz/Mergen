@@ -17,6 +17,7 @@ namespace Mergen.Game.Api.API.Battles
             public bool UsedAnswersHistoryHelper { get; set; }
             public bool UsedAskMergenHelper { get; set; }
             public int TimeExtenderHelperUsageCount { get; set; }
+            public bool UsedDoubleChanceHelper { get; set; }
         }
     }
 }
