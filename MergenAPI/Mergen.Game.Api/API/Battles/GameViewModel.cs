@@ -16,7 +16,13 @@ namespace Mergen.Game.Api.API.Battles
         {
             var vm = Mapper.Map<GameViewModel>(game);
             vm.AvailableCategories = game.GameCategories.Select(q => CategoryViewModel.Map(q.Category));
-            vm.Questions = game.GameQuestions.Select(q => QuestionViewModel.Map(q.Question));
+            vm.Questions = game.GameQuestions.Select(q =>
+            {
+                var model = QuestionViewModel.Map(q.Question);
+                model.Player1SelectedAnswer = q.Player1SelectedAnswer;
+                model.Player2SelectedAnswer = q.Player2SelectedAnswer;
+                return model;
+            });
             return vm;
         }
 
@@ -53,6 +59,8 @@ namespace Mergen.Game.Api.API.Battles
         public string Answer3 { get; set; }
         public string Answer4 { get; set; }
         public int CorrectAnswerNumber { get; set; }
+        public int? Player1SelectedAnswer { get; set; }
+        public int? Player2SelectedAnswer { get; set; }
 
         public static QuestionViewModel Map(Question question)
         {
