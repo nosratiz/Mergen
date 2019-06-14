@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -117,6 +118,19 @@ namespace Mergen.Game.Api.API.Accounts
             return OkData(ProfileViewModel.Map(friends));
         }
 
+        [HttpDelete]
+        [Route("accounts/{accountId}/friends/{friendAccountId}")]
+        public async Task<ActionResult> DeleteFriendshipAsync([FromRoute] long accountId,
+            [FromRoute] long friendAccountId, CancellationToken cancellationToken)
+        {
+            if (accountId != AccountId)
+                return Forbidden();
+
+            await _accountFriendManager.DeleteFriendshipAsync(accountId, friendAccountId, cancellationToken);
+
+            return Ok();
+        }
+
         [HttpPost]
         [Route("accounts/{accountId}/friendrequests")]
         public async Task<ActionResult<ApiResultViewModel<FriendRequest>>> SendFriendRequest([FromRoute] long accountId,
@@ -208,8 +222,25 @@ namespace Mergen.Game.Api.API.Accounts
             if (friendRequest.StatusId != FriendRequestStatus.Pending)
                 return BadRequest("invalid_state", "friend request in invalid state");
 
-            friendRequest.StatusId = FriendRequestStatus.Accepted;
-            await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                friendRequest.StatusId = FriendRequestStatus.Accepted;
+                await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
+
+                await _accountFriendManager.SaveAsync(new AccountFriend
+                {
+                    AccountId = friendRequest.FromAccountId,
+                    FriendAccountId = friendRequest.ToAccountId
+                }, cancellationToken);
+
+                await _accountFriendManager.SaveAsync(new AccountFriend
+                {
+                    AccountId = friendRequest.ToAccountId,
+                    FriendAccountId = friendRequest.FromAccountId
+                }, cancellationToken);
+
+                transaction.Complete();
+            }
 
             return Ok();
         }

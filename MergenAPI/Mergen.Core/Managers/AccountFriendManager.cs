@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.Managers.Base;
@@ -36,7 +36,25 @@ namespace Mergen.Core.Managers
         {
             using (var dbc = CreateDbContext())
             {
-                return await dbc.AccountFriends.AnyAsync(q=>q.AccountId == accountId && q.FriendAccountId == friendAccountId, cancellationToken);
+                return await dbc.AccountFriends.AnyAsync(q => q.AccountId == accountId && q.FriendAccountId == friendAccountId, cancellationToken);
+            }
+        }
+
+        public async Task DeleteFriendshipAsync(long accountId, long friendAccountId, CancellationToken cancellationToken)
+        {
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                var friendships =
+                    await GetAsync(
+                        q => q.AccountId == accountId && q.FriendAccountId == friendAccountId ||
+                             q.AccountId == friendAccountId && q.FriendAccountId == accountId, cancellationToken);
+
+                foreach (var friendship in friendships)
+                {
+                    await DeleteAsync(friendship, cancellationToken);
+                }
+
+                transaction.Complete();
             }
         }
     }
