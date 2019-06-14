@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Mergen.Core.Entities.Base
@@ -6,5 +7,7 @@ namespace Mergen.Core.Entities.Base
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
+
+        public bool IsArchived { get; set; }
     }
 }

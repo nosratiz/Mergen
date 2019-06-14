@@ -83,8 +83,7 @@ namespace Mergen.Core.Data
             var randomCategoryIds = new HashSet<long>();
             while (game.GameCategories.Count < 3)
             {
-                var randomCategory = await _dataContext.Categories.OrderBy(q => Guid.NewGuid())
-                    .FirstOrDefaultAsync(cancellationToken);
+                var randomCategory = await _dataContext.Categories.Where(q => q.IsArchived == false).OrderBy(q => Guid.NewGuid()).FirstOrDefaultAsync(cancellationToken);
                 if (randomCategory != null && randomCategoryIds.Add(randomCategory.Id))
                 {
                     game.GameCategories.Add(new GameCategory
@@ -137,7 +136,7 @@ namespace Mergen.Core.Data
             var randomCategoryIds = new HashSet<long>();
             while (game.GameCategories.Count < 3)
             {
-                var randomCategory = await _dataContext.Categories.OrderBy(q => Guid.NewGuid())
+                var randomCategory = await _dataContext.Categories.Where(q => q.IsArchived == false).OrderBy(q => Guid.NewGuid())
                     .FirstOrDefaultAsync(cancellationToken);
                 if (randomCategory != null && !oldCategories.Contains(randomCategory.Id) && randomCategoryIds.Add(randomCategory.Id))
                 {

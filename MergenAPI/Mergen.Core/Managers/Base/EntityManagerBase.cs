@@ -106,5 +106,15 @@ namespace Mergen.Core.Managers.Base
                 await dbc.SaveChangesAsync(cancellationToken);
             }
         }
+
+        public virtual async Task ArchiveAsync(TEntity entity, CancellationToken cancellationToken = default)
+        {
+            using (var dbc = CreateDbContext())
+            {
+                entity.IsArchived = true;
+                dbc.Set<TEntity>().Attach(entity).State = EntityState.Modified;
+                await dbc.SaveChangesAsync(cancellationToken);
+            }
+        }
     }
 }

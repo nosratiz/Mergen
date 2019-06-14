@@ -19,12 +19,14 @@ namespace Mergen.Core.Managers
         {
         }
 
-        public override async Task DeleteAsync(Question entity, CancellationToken cancellationToken = default)
+        public override async Task ArchiveAsync(Question entity, CancellationToken cancellationToken = default)
         {
             using (var dbc = CreateDbContext())
             {
                 dbc.QuestionCategories.RemoveRange(dbc.QuestionCategories.Where(q => q.QuestionId == entity.Id));
-                dbc.Questions.Remove(entity);
+                entity.CategoryIdsCache = string.Empty;
+                entity.IsArchived = true;
+                dbc.Questions.Attach(entity).State = EntityState.Modified;
                 await dbc.SaveChangesAsync(cancellationToken);
             }
         }

@@ -25,6 +25,7 @@ namespace Mergen.Admin.Api.API.Questions
             return new QuestionViewModel
             {
                 Id = question.Id.ToString(),
+                IsArchived = question.IsArchived,
                 Body = question.Body,
                 Difficulty = question.Difficulty,
                 Answer1 = question.Answer1,

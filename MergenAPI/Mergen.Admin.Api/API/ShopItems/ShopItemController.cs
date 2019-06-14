@@ -96,7 +96,7 @@ namespace Mergen.Admin.Api.API.ShopItems
 
             var shopItem = await _shopItemManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
 
-            await _shopItemManager.DeleteAsync(shopItem, cancellationToken);
+            await _shopItemManager.ArchiveAsync(shopItem, cancellationToken);
 
             return Ok();
         }

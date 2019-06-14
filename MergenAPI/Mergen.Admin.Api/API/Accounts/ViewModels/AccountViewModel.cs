@@ -30,6 +30,7 @@ namespace Mergen.Admin.Api.API.Accounts.ViewModels
         {
             var model = new AccountViewModel();
             model.Id = account.Id.ToString();
+            model.IsArchived = account.IsArchived;
             model.Email = account.Email;
             model.PhoneNumber = account.PhoneNumber;
             model.FirstName = account.FirstName;

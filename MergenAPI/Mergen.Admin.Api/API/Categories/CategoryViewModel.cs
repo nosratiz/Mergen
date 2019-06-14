@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
@@ -18,6 +18,7 @@ namespace Mergen.Admin.Api.API.Categories
             return new CategoryViewModel
             {
                 Id = category.Id.ToString(),
+                IsArchived =  category.IsArchived,
                 Title = category.Title,
                 Description = category.Description,
                 StatusId = category.StatusId.ToString(),

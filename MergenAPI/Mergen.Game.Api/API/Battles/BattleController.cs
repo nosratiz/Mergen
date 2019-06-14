@@ -142,7 +142,7 @@ namespace Mergen.Game.Api.API.Battles
                 if (customCategory)
                 {
                     category = await _dataContext.Categories.FirstOrDefaultAsync(q => q.Id == categoryId, cancellationToken);
-                    if (category == null)
+                    if (category == null || category.StatusId != CategoryStatusIds.Enabled || category.IsArchived)
                         return BadRequest();
 
                     var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
@@ -216,7 +216,7 @@ namespace Mergen.Game.Api.API.Battles
             CancellationToken cancellationToken)
         {
             var activeCategories = await _dataContext.Categories.AsNoTracking()
-                .Where(q => q.StatusId == CategoryStatusIds.Enabled).ToListAsync(cancellationToken);
+                .Where(q => q.IsArchived == false && q.StatusId == CategoryStatusIds.Enabled).ToListAsync(cancellationToken);
             return OkData(CategoryViewModel.Map(activeCategories));
         }
 

@@ -82,7 +82,7 @@ namespace Mergen.Admin.Api.API.Categories
             CancellationToken cancellationToken)
         {
             var item = await _categoryManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
-            await _categoryManager.DeleteAsync(item, cancellationToken);
+            await _categoryManager.ArchiveAsync(item, cancellationToken);
 
             return Ok();
         }

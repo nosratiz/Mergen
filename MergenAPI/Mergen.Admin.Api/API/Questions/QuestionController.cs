@@ -168,7 +168,7 @@ namespace Mergen.Admin.Api.API.Questions
             CancellationToken cancellationToken)
         {
             var item = await _questionManager.GetByIdAsyncThrowNotFoundIfNotExists(id, cancellationToken);
-            await _questionManager.DeleteAsync(item, cancellationToken);
+            await _questionManager.ArchiveAsync(item, cancellationToken);
 
             return Ok();
         }
