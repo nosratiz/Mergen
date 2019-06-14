@@ -6,6 +6,7 @@ namespace Mergen.Core.Entities
     {
         public long AccountId { get; set; }
         public long CategoryId { get; set; }
+        public Category Category { get; set; }
         public long TotalQuestionsCount { get; set; }
         public long CorrectAnswersCount { get; set; }
     }

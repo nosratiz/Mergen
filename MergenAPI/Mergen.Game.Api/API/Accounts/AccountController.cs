@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
@@ -12,6 +14,7 @@ using Mergen.Core.Services;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace Mergen.Game.Api.API.Accounts
@@ -23,14 +26,16 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly StatsManager _statsManager;
         private readonly AccountFriendManager _accountFriendManager;
         private readonly FriendRequestManager _friendRequestManager;
+        private readonly DataContext _dataContext;
 
-        public AccountController(AccountManager accountManager, IFileService fileService, StatsManager statsManager, AccountFriendManager accountFriendManager, FriendRequestManager friendRequestManager)
+        public AccountController(AccountManager accountManager, IFileService fileService, StatsManager statsManager, AccountFriendManager accountFriendManager, FriendRequestManager friendRequestManager, DataContext dataContext)
         {
             _accountManager = accountManager;
             _fileService = fileService;
             _statsManager = statsManager;
             _accountFriendManager = accountFriendManager;
             _friendRequestManager = friendRequestManager;
+            _dataContext = dataContext;
         }
 
         [HttpPost]
@@ -89,7 +94,8 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var accountStats = await _statsManager.GetByAccountIdAsync(accountId, cancellationToken);
-            return OkData(accountStats);
+            var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking().Include(q => q.Category).Where(q => q.AccountId == accountId).ToListAsync(cancellationToken);
+            return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStats));
         }
 
         [HttpGet]
@@ -302,7 +308,7 @@ namespace Mergen.Game.Api.API.Accounts
         [Route("accounts/resetpasswordrequests")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResultViewModel<ResetPasswordRequestViewModel>>> ResetPasswordRequest(
-            [FromBody]ResetPasswordRequestInputModel inputModel,[FromServices] IEmailService emailService, CancellationToken cancellationToken)
+            [FromBody]ResetPasswordRequestInputModel inputModel, [FromServices] IEmailService emailService, CancellationToken cancellationToken)
         {
             var existingAccount = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
             if (existingAccount == null)
