@@ -97,6 +97,12 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var accountStats = await _statsManager.GetByAccountIdAsync(accountId, cancellationToken);
+            if (accountStats == null)
+                return OkData(new AccountStatsSummaryViewModel
+                {
+                    AccountId = accountId
+                });
+
             var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking().Include(q => q.Category).Where(q => q.AccountId == accountId).ToListAsync(cancellationToken);
             return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStats));
         }
