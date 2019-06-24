@@ -34,7 +34,6 @@ namespace Mergen.Core.Data
         public DbSet<UploadedFile> UploadedFiles { get; set; }
         public DbSet<PurchaseLog> PurchaseLogs { get; set; }
         public DbSet<AccountItem> AccountItems { get; set; }
-
         public DbSet<Battle> Battles { get; set; }
         public DbSet<OneToOneBattle> OneToOneBattles { get; set; }
         public DbSet<Game> Games { get; set; }
@@ -46,5 +45,6 @@ namespace Mergen.Core.Data
         public DbSet<FriendRequest> FriendRequests { get; set; }
         public DbSet<AccountFriend> AccountFriends { get; set; }
         public DbSet<BattleInvitation> BattleInvitations { get; set; }
+        public DbSet<Chat> Chats { get; set; }
     }
 }
