@@ -45,6 +45,10 @@ namespace Mergen.Core
                         services.AddEntityFrameworkSqlite().AddDbContext<DataContext>(options =>
                             options.UseSqlite(configuration.GetConnectionString("Mergen")));
                         break;
+                    case "postgresql":
+                        services.AddEntityFrameworkNpgsql().AddDbContext<DataContext>(options =>
+                            options.UseNpgsql(configuration.GetConnectionString("Mergen")));
+                        break;
                     case "sqlserver":
                     default:
                         services.AddEntityFrameworkSqlServer().AddDbContext<DataContext>(options =>
@@ -55,7 +59,7 @@ namespace Mergen.Core
 
             services.AddSingleton<DbContextFactory>();
         }
-
+            
         private static void RegisterManagers(this IServiceCollection services)
         {
             services.AddSingleton<AccountInvitationManager>();
