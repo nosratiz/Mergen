@@ -26,6 +26,7 @@ namespace Mergen.Game.Api.API.Battles
         private const int ExperienceBase = 10;
         private const int WinExperienceMultiplier = 3;
         private const int LoseExperienceMultiplier = 1;
+        private const int DrawExperienceMultiplier = 2;
 
         private const int CoinBase = 10;
         private const int WinCoinMultiplier = 2;
@@ -411,7 +412,11 @@ namespace Mergen.Game.Api.API.Battles
 
                     battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
                     battle.Player2CorrectAnswersCount = player2CorrectAnswersCount;
-                    battle.WinnerPlayerId = player1CorrectAnswersCount > player2CorrectAnswersCount ? battle.Player1Id : battle.Player2Id;
+
+                    if (player1CorrectAnswersCount > player2CorrectAnswersCount)
+                        battle.WinnerPlayerId = battle.Player1Id;
+                    else if (player2CorrectAnswersCount > player1CorrectAnswersCount)
+                        battle.WinnerPlayerId = battle.Player2Id;
 
                     var playersStats = await _dataContext.AccountStatsSummaries
                         .Where(q => q.AccountId == battle.Player1Id || q.AccountId == battle.Player2Id)
@@ -440,7 +445,7 @@ namespace Mergen.Game.Api.API.Battles
                         player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
 
                     }
-                    else
+                    else if (battle.WinnerPlayerId == battle.Player2Id)
                     {
                         player1Stats.LoseCount += 1;
                         player2Stats.WinCount += 1;
@@ -455,6 +460,13 @@ namespace Mergen.Game.Api.API.Battles
                         // Experience for lose
                         player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
                         player1Stats.Coins += player1CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
+                    }
+                    else
+                    {
+                        // Exprience for draw (drop)
+
+                        player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
+                        player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
                     }
 
                     player1Stats.WinRatio = player1Stats.WinCount / (float)player1Stats.TotalBattlesPlayed;
