@@ -8,6 +8,7 @@ using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
+using Mergen.Core.Managers;
 using Mergen.Core.Options;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,7 @@ namespace Mergen.Game.Api.API.Battles
         private readonly DataContext _dataContext;
         private readonly GamingService _gamingService;
         private readonly BattleMapper _battleMapper;
+        private readonly LevelManager _levelManager;
         private readonly GameSettings _gameSettingsOptions;
 
         private const int ExperienceBase = 10;
@@ -32,11 +34,12 @@ namespace Mergen.Game.Api.API.Battles
         private const int WinCoinMultiplier = 2;
         private const int LoseCoinMultiplier = 1;
 
-        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions)
+        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager)
         {
             _dataContext = dataContext;
             _gamingService = gamingService;
             _battleMapper = battleMapper;
+            _levelManager = levelManager;
             _gameSettingsOptions = gameSettingsOptions.Value;
         }
 
@@ -468,6 +471,9 @@ namespace Mergen.Game.Api.API.Battles
                         player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
                         player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
                     }
+
+                    player1Stats.Level = _levelManager.GetLevel(player1Stats.Score)?.LevelNumber ?? 0;
+                    player2Stats.Level = _levelManager.GetLevel(player2Stats.Score)?.LevelNumber ?? 0;
 
                     player1Stats.WinRatio = player1Stats.WinCount / (float)player1Stats.TotalBattlesPlayed;
                     player2Stats.WinRatio = player2Stats.WinCount / (float)player2Stats.TotalBattlesPlayed;
