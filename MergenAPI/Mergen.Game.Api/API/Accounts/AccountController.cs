@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,6 +44,7 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpPost]
         [Route("accounts")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResultViewModel<AccountViewModel>>> Register([FromBody]RegisterInputModel inputModel, CancellationToken cancellationToken)
         {
             var account = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
@@ -57,11 +59,13 @@ namespace Mergen.Game.Api.API.Accounts
             account.ReceiveNotifications = true;
             account.SearchableByEmailAddressOrUsername = true;
             account.FriendsOnlyBattleInvitations = false;
+            account.Nickname = account.Email.Substring(0, account.Email.IndexOf('@'));
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
             var accountStats = new AccountStatsSummary
             {
-                AccountId = account.Id
+                AccountId = account.Id,
+                Level = 1
             };
             await _statsManager.SaveAsync(accountStats, cancellationToken);
 
@@ -74,6 +78,10 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
+
+            if (account.AvatarImageId == null)
+                return NotFound("no_avatar");
+
             return File(_fileService.GetFile(account.AvatarImageId.ToString()), "image/png");
         }
 
@@ -142,6 +150,16 @@ namespace Mergen.Game.Api.API.Accounts
         public async Task<ActionResult<ApiResultViewModel<FriendRequest>>> SendFriendRequest([FromRoute] long accountId,
             [FromBody] FriendRequestInputModel inputModel, CancellationToken cancellationToken)
         {
+            if (accountId != AccountId)
+                return Forbidden();
+
+            if (inputModel.FriendAccountId == accountId)
+                return BadRequest("invalid_friendAccountId", "you cannot friend yourself");
+
+            var friendAccount = await _accountManager.GetAsync(inputModel.FriendAccountId, cancellationToken);
+            if (friendAccount == null || friendAccount.IsArchived)
+                return BadRequest("invalid_friendAcccountId", "friend account not found.");
+
             var friendRequest = await _friendRequestManager.GetExistingRequest(accountId, inputModel.FriendAccountId, cancellationToken);
 
             if (friendRequest != null)
@@ -168,7 +186,16 @@ namespace Mergen.Game.Api.API.Accounts
         public async Task<ActionResult<ApiResultViewModel<FriendRequest>>> GetFriendRequests(
             [FromQuery] QueryInputModel<FriendRequestFilterInputModel> filterInputModel, CancellationToken cancellationToken)
         {
-            return OkData(_friendRequestManager.GetAllAsync(filterInputModel, cancellationToken));
+            var fromAccountId = filterInputModel.FilterParameters.FirstOrDefault(q =>
+                q.FieldName == nameof(FriendRequestFilterInputModel.FromAccountId));
+
+            if (fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(),
+                    StringComparison.OrdinalIgnoreCase))
+                return Forbidden();
+
+            var friendRequests = await _friendRequestManager.GetAllAsync(filterInputModel, cancellationToken);
+
+            return OkData(friendRequests.Data, friendRequests.TotalCount);
         }
 
         [HttpPost]

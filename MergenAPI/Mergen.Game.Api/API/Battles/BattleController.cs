@@ -238,6 +238,9 @@ namespace Mergen.Game.Api.API.Battles
             if (game == null)
                 return NotFound();
 
+            if (game.GameState == GameState.Completed || game.GameState == GameState.SelectCategory)
+                return BadRequest("invalid_gameState");
+
             /*            if (game.CurrentTurnPlayerId != playerId)
                             return BadRequest("invalid_turn");*/
 

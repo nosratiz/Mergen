@@ -67,11 +67,15 @@ namespace Mergen.Core.Managers
                 //        (account, summary) => new {account, summary})
                 //    .ToListAsync(cancellationToken);
 
-                var query = from acc in dbc.Accounts where acc.Nickname != null && acc.SearchableByEmailAddressOrUsername == true
-                    join statsSummary in dbc.AccountStatsSummaries on acc.Id equals statsSummary.AccountId
-                        into statSummaries
-                    from stats in statSummaries.DefaultIfEmpty()
-                    select new {acc, stats};
+                var query = from acc in dbc.Accounts
+                            where acc.Nickname != null && acc.SearchableByEmailAddressOrUsername == true
+                            join statsSummary in dbc.AccountStatsSummaries on acc.Id equals statsSummary.AccountId
+                                into statSummaries
+                            from stats in statSummaries.DefaultIfEmpty()
+                            select new { acc, stats };
+
+                if (!string.IsNullOrWhiteSpace(term))
+                    query = query.Where(q => q.acc.Nickname.Contains(term));
 
                 return (await query.Skip((page - 1) * pageSize).Take(page * pageSize).ToListAsync(cancellationToken)).Select(q => (q.acc, q.stats));
             }

@@ -8,6 +8,7 @@ using Mergen.Core.Managers;
 using Mergen.Core.Security;
 using Mergen.Game.Api.Security.AuthenticationSystem;
 using Mergen.Game.Api.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 
@@ -28,6 +29,7 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpPost]
         [Route("sessions")]
+        [AllowAnonymous]
         public async Task<ActionResult<ApiResultViewModel<SessionViewModel>>> Login([FromBody] LoginInputModel inputModel,
             CancellationToken cancellationToken)
         {
