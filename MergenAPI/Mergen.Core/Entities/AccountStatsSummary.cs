@@ -31,5 +31,7 @@ namespace Mergen.Core.Entities
         public int AskMergenHelperUsageCount { get; set; }
         public int DoubleChanceHelperUsageCount { get; set; }
         public int TimeExtenderHelperUsageCount { get; set; }
+        public long CoinsSpentOnAvatarItems { get; set; }
+        public long CoinsSpentOnBoosterItems { get; set; }
     }
 }

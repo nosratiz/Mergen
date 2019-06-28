@@ -8,8 +8,10 @@ using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
 using Mergen.Core.QueryProcessing;
+using Mergen.Core.Services;
 using Mergen.Game.Api.Helpers;
 using Mergen.Game.Api.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,11 +21,13 @@ namespace Mergen.Game.Api.API.Shop
     {
         private readonly ShopItemManager _shopItemManager;
         private readonly DataContext _dataContext;
+        private readonly AchievementService _achievementService;
 
-        public ShopController(ShopItemManager shopItemManager, DataContext dataContext)
+        public ShopController(ShopItemManager shopItemManager, DataContext dataContext, AchievementService achievementService)
         {
             _shopItemManager = shopItemManager;
             _dataContext = dataContext;
+            _achievementService = achievementService;
         }
 
         [HttpGet]
@@ -46,6 +50,7 @@ namespace Mergen.Game.Api.API.Shop
 
         [HttpPost]
         [Route("paymentresults/{paymentUniqueId}/result")]
+        [AllowAnonymous]
         public async Task<ActionResult> AccountPaymentResult(string paymentUniqueId, int state,
             CancellationToken cancellationToken)
         {
@@ -63,6 +68,9 @@ namespace Mergen.Game.Api.API.Shop
                     q => q.AccountId == payment.AccountId && q.ItemTypeId == payment.ShopItem.TypeId,
                     cancellationToken);
 
+                var playerStats = await _dataContext.AccountStatsSummaries.FirstAsync(q =>
+                    q.IsArchived == false && q.AccountId == payment.AccountId, cancellationToken: cancellationToken);
+
                 if (accountItem != null)
                 {
                     accountItem.Quantity += payment.ShopItem.Quantity ?? 1;
@@ -79,6 +87,17 @@ namespace Mergen.Game.Api.API.Shop
 
                     _dataContext.AccountItems.Add(accountItem);
                 }
+
+                if (payment.ShopItem.TypeId == ShopItemTypeIds.AvatarItem)
+                {
+                    playerStats.CoinsSpentOnAvatarItems += (long)payment.Amount;
+                }
+                else if (payment.ShopItem.TypeId == ShopItemTypeIds.Booster)
+                {
+                    playerStats.CoinsSpentOnBoosterItems += (long)payment.Amount;
+                }
+
+                await _achievementService.ProcessPaymentAchievementsAsync(playerStats, payment, cancellationToken);
             }
             else
             {

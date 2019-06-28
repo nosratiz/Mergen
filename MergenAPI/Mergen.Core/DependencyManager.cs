@@ -77,6 +77,7 @@ namespace Mergen.Core
             services.AddSingleton<LevelManager>();
 
             services.AddScoped<GamingService>();
+            services.AddScoped<AchievementService>();
         }
 
         private static void ConfigOptions(this IServiceCollection services, IConfiguration configuration)

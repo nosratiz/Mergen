@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mergen.Core.Services
@@ -188,6 +189,33 @@ namespace Mergen.Core.Services
             }
 
             await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task ProcessPaymentAchievementsAsync(AccountStatsSummary playerStats, Payment payment, CancellationToken cancellationToken)
+        {
+            var achievementTypes = await _context.AchievementTypes.Where(q => q.IsArchived == false && (q.CoinsSpentOnAvatarItems != null || q.CoinsSpentOnBooster != null)).ToListAsync(cancellationToken);
+
+            foreach (var a in achievementTypes)
+            {
+                if (a.CoinsSpentOnAvatarItems != null && payment.ShopItem.TypeId == ShopItemTypeIds.AvatarItem && playerStats.CoinsSpentOnAvatarItems >= a.CoinsSpentOnAvatarItems)
+                {
+                    _context.Achievements.Add(new Achievement
+                    {
+                        AccountId = playerStats.AccountId,
+                        AchievementTypeId = a.Id,
+                        AchieveDateTime = DateTime.UtcNow
+                    });
+                }
+                else if (a.CoinsSpentOnBooster != null && payment.ShopItem.TypeId == ShopItemTypeIds.Booster && playerStats.CoinsSpentOnBoosterItems >= a.CoinsSpentOnBooster)
+                {
+                    _context.Achievements.Add(new Achievement
+                    {
+                        AccountId = playerStats.AccountId,
+                        AchievementTypeId = a.Id,
+                        AchieveDateTime = DateTime.UtcNow
+                    });
+                }
+            }
         }
     }
 }
