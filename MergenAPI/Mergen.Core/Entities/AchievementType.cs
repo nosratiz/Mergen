@@ -17,7 +17,7 @@ namespace Mergen.Core.Entities
         public long? GiftedCoinsAmount { get; set; }
         public long? NumberOfTotalBattlesPlayed { get; set; }
         public long? NumberOfRegisteredFriendsViaInviteLink { get; set; }
-        public long? NumberOfInvitesThatAccepted { get; set; }
+        public long? NumberOfSuccessfulBattleInvitations { get; set; }
         public long? RemoveTwoAnswersHelperUsageCount { get; set; }
         public long? AnswerHistoryHelperUsageCount { get; set; }
         public long? AskMergenHelperUsageCount { get; set; }

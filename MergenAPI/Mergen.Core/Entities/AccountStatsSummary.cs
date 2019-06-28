@@ -26,5 +26,6 @@ namespace Mergen.Core.Entities
         public decimal GiftedCoins { get; set; }
         public int UnlockedAchievements { get; set; }
         public string Top3Skills { get; set; }
+        public int SuccessfulBattleInvitationsCount { get; set; }
     }
 }

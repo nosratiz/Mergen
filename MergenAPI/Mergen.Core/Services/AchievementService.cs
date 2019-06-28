@@ -48,6 +48,8 @@ namespace Mergen.Core.Services
                     ProcessTotalBattlesAchievement(battle.Player2Id.Value, player2Stats, player2Achievements, a);
                 }
             }
+
+            await _context.SaveChangesAsync(cancellationToken);
         }
 
         private void ProcessWinnerAchievement(long playerId, AccountStatsSummary playerStats,
@@ -90,6 +92,27 @@ namespace Mergen.Core.Services
                     AchieveDateTime = DateTime.UtcNow
                 });
             }
+        }
+
+        public async Task ProcessSuccessfulBattleInvitationAchievements(BattleInvitation battleInvitation,
+            AccountStatsSummary inviterPlayerStats, CancellationToken cancellationToken)
+        {
+            var achievementTypes = await _context.AchievementTypes.AsNoTracking().Where(q => q.IsArchived == false && q.NumberOfSuccessfulBattleInvitations != null).ToListAsync(cancellationToken);
+
+            foreach (var a in achievementTypes)
+            {
+                if (inviterPlayerStats.SuccessfulBattleInvitationsCount >= a.NumberOfSuccessfulBattleInvitations)
+                {
+                    _context.Achievements.Add(new Achievement
+                    {
+                        AccountId = battleInvitation.AccountId,
+                        AchievementTypeId = a.Id,
+                        AchieveDateTime = DateTime.UtcNow
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
         }
     }
 }
