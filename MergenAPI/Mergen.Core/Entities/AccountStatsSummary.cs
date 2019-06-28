@@ -26,5 +26,10 @@ namespace Mergen.Core.Entities
         public int UnlockedAchievements { get; set; }
         public string Top3Skills { get; set; }
         public int SuccessfulBattleInvitationsCount { get; set; }
+        public int RemoveTwoAnswersHelperUsageCount { get; set; }
+        public int AnswerHistoryHelperUsageCount { get; set; }
+        public int AskMergenHelperUsageCount { get; set; }
+        public int DoubleChanceHelperUsageCount { get; set; }
+        public int TimeExtenderHelperUsageCount { get; set; }
     }
 }

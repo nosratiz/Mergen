@@ -114,5 +114,80 @@ namespace Mergen.Core.Services
 
             await _context.SaveChangesAsync(cancellationToken);
         }
+
+        public async Task ProcessAnswerTimeAchievementsAsync(AccountStatsSummary playerStat, List<AccountCategoryStat> changedCategoryStats, CancellationToken cancellationToken)
+        {
+            var achievementTypes = await _context.AchievementTypes.AsNoTracking().Where(q => q.IsArchived == false).ToListAsync(cancellationToken);
+
+            foreach (var a in achievementTypes)
+            {
+                if (a.CorrectAnswersCountInCategory != null)
+                {
+                    var catStat = changedCategoryStats.FirstOrDefault(q => q.CategoryId == a.CategoryId);
+                    if (catStat != null)
+                    {
+                        if (catStat.CorrectAnswersCount >= a.CorrectAnswersCountInCategory)
+                        {
+                            _context.Achievements.Add(new Achievement
+                            {
+                                AccountId = playerStat.AccountId,
+                                AchievementTypeId = a.Id,
+                                AchieveDateTime = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+                else if (a.RemoveTwoAnswersHelperUsageCount != null)
+                {
+                    if (playerStat.RemoveTwoAnswersHelperUsageCount >= a.RemoveTwoAnswersHelperUsageCount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow
+                        });
+                    }
+                }
+                else if (a.AnswerHistoryHelperUsageCount != null)
+                {
+                    if (playerStat.AnswerHistoryHelperUsageCount >= a.AnswerHistoryHelperUsageCount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow
+                        });
+                    }
+                }
+                else if (a.AskMergenHelperUsageCount != null)
+                {
+                    if (playerStat.AskMergenHelperUsageCount >= a.AskMergenHelperUsageCount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow
+                        });
+                    }
+                }
+                else if (a.DoubleChanceHelperUsageCount != null)
+                {
+                    if (playerStat.DoubleChanceHelperUsageCount >= a.DoubleChanceHelperUsageCount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow
+                        });
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

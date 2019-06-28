@@ -268,6 +268,8 @@ namespace Mergen.Game.Api.API.Battles
             if (inputModel.Answers.Count() != game.GameQuestions.Count)
                 return BadRequest("invalid_answersCount");
 
+            var changedCategoryStats = new List<AccountCategoryStat>();
+
             foreach (var answer in inputModel.Answers)
             {
                 var gq = game.GameQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
@@ -316,7 +318,6 @@ namespace Mergen.Game.Api.API.Battles
                         break;
                 }
 
-
                 // Process Category stats for player
                 foreach (var category in gq.Question.QuestionCategories)
                 {
@@ -330,6 +331,7 @@ namespace Mergen.Game.Api.API.Battles
                         };
 
                         _dataContext.AccountCategoryStats.Add(playerCategoryStat);
+                        changedCategoryStats.Add(playerCategoryStat);
                     }
 
                     playerCategoryStat.TotalQuestionsCount += 1;
@@ -358,6 +360,7 @@ namespace Mergen.Game.Api.API.Battles
                     }
 
                     accountCoin.Quantity -= _gameSettingsOptions.RemoveTwoAnswersHelperPrice;
+                    playerStat.RemoveTwoAnswersHelperUsageCount += 1;
                 }
 
                 if (answer.UsedAskMergenHelper)
@@ -370,6 +373,7 @@ namespace Mergen.Game.Api.API.Battles
                     }
 
                     accountCoin.Quantity -= _gameSettingsOptions.AskMergenHelperPrice;
+                    playerStat.AskMergenHelperUsageCount += 1;
                 }
 
                 if (answer.UsedDoubleChanceHelper)
@@ -382,6 +386,7 @@ namespace Mergen.Game.Api.API.Battles
                     }
 
                     accountCoin.Quantity -= _gameSettingsOptions.DoubleChanceHelperPrice;
+                    playerStat.DoubleChanceHelperUsageCount += 1;
                 }
 
                 if (answer.TimeExtenderHelperUsageCount > 0)
@@ -394,8 +399,11 @@ namespace Mergen.Game.Api.API.Battles
                     }
 
                     accountCoin.Quantity -= _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount;
+                    playerStat.TimeExtenderHelperUsageCount += 1;
                 }
             }
+
+            await _achievementService.ProcessAnswerTimeAchievementsAsync(playerStat, changedCategoryStats, cancellationToken);
 
             if (game.GameQuestions.All(q => q.Player1SelectedAnswer.HasValue && q.Player2SelectedAnswer.HasValue))
             {
