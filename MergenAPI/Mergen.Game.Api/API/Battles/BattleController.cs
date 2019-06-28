@@ -10,6 +10,7 @@ using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
 using Mergen.Core.Options;
+using Mergen.Core.Services;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ namespace Mergen.Game.Api.API.Battles
         private readonly GamingService _gamingService;
         private readonly BattleMapper _battleMapper;
         private readonly LevelManager _levelManager;
+        private readonly AchievementService _achievementService;
         private readonly GameSettings _gameSettingsOptions;
 
         private const int ExperienceBase = 10;
@@ -34,12 +36,13 @@ namespace Mergen.Game.Api.API.Battles
         private const int WinCoinMultiplier = 2;
         private const int LoseCoinMultiplier = 1;
 
-        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager)
+        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager, AchievementService achievementService)
         {
             _dataContext = dataContext;
             _gamingService = gamingService;
             _battleMapper = battleMapper;
             _levelManager = levelManager;
+            _achievementService = achievementService;
             _gameSettingsOptions = gameSettingsOptions.Value;
         }
 
@@ -483,6 +486,9 @@ namespace Mergen.Game.Api.API.Battles
 
                     player1Stats.LoseRatio = player1Stats.LoseCount / (float)player1Stats.TotalBattlesPlayed;
                     player2Stats.LoseRatio = player2Stats.LoseCount / (float)player2Stats.TotalBattlesPlayed;
+
+                    await _achievementService.ProcessBattleAchievementsAsync(battle, player1Stats, player2Stats,
+                        cancellationToken);
                 }
                 else
                 {
