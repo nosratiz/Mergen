@@ -20,7 +20,6 @@ namespace Mergen.Game.Api.API.Accounts
         public double WinRatio { get; set; }
         public int LoseCount { get; set; }
         public double LoseRatio { get; set; }
-        public int TotalGroupGamesCount { get; set; }
         public int AceWinCount { get; set; }
         public int ContinuousActiveDaysCount { get; set; }
         public int ContinuousActiveDaysRecord { get; set; }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
@@ -19,7 +19,6 @@ namespace Mergen.Admin.Api.API.AccountStats
         public double WinRatio { get; set; }
         public int LoseCount { get; set; }
         public double LoseRatio { get; set; }
-        public int TotalGroupGamesCount { get; set; }
         public int AceWinCount { get; set; }
         public int ContinuousActiveDaysCount { get; set; }
         public int ContinuousActiveDaysRecord { get; set; }
