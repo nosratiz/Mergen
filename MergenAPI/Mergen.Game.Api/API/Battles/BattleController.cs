@@ -582,6 +582,43 @@ namespace Mergen.Game.Api.API.Battles
             return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Ignored, cancellationToken);
         }
 
+        [HttpPost]
+        [Route("sky")]
+        public async Task<IActionResult> CalcSkyAsync(long accountId, CancellationToken cancellationToken)
+        {
+            if (AccountId != accountId)
+                return Forbidden();
+
+            var battleCorrectAnswersCount = await _dataContext.OneToOneBattles
+                .Where(q => q.Player1Id == accountId || q.Player2Id == accountId)
+                .GroupBy(q => q.Player1Id == accountId ? q.Player1CorrectAnswersCount : q.Player2CorrectAnswersCount)
+                .Select(q => new { CorrectAnswersCount = q.Key, BattlesCount = q.Count() }).ToListAsync(cancellationToken);
+
+            var totalBattlesCount = battleCorrectAnswersCount.Sum(q => q.BattlesCount);
+
+            int sky;
+
+            var averageAnswersCountIn70PercentOfBattles = Math.Round(battleCorrectAnswersCount.OrderByDescending(q => q.CorrectAnswersCount).Take((int)(totalBattlesCount * 0.7f)).Average(q => q.CorrectAnswersCount), 0);
+            if (averageAnswersCountIn70PercentOfBattles >= 14)
+                sky = 7;
+            else if (averageAnswersCountIn70PercentOfBattles >= 13)
+                sky = 6;
+            else if (averageAnswersCountIn70PercentOfBattles >= 12)
+                sky = 5;
+            else if (averageAnswersCountIn70PercentOfBattles >= 11)
+                sky = 4;
+            else if (averageAnswersCountIn70PercentOfBattles >= 10)
+                sky = 3;
+            else if (averageAnswersCountIn70PercentOfBattles >= 9)
+                sky = 2;
+            else if (averageAnswersCountIn70PercentOfBattles >= 8)
+                sky = 1;
+            else
+                sky = 0;
+
+            return Ok(sky);
+        }
+
         private async Task<IActionResult> ChangeBattleInvitationStatus(long battleInvitationId, BattleInvitationStatus status, CancellationToken cancellationToken)
         {
             var invitation = await _dataContext.BattleInvitations.FirstOrDefaultAsync(q => q.Id == battleInvitationId, cancellationToken);
