@@ -1,5 +1,6 @@
 using System;
 using Mergen.Core.Entities.Base;
+using Mergen.Core.EntityIds;
 
 namespace Mergen.Core.Entities
 {
@@ -13,7 +14,7 @@ namespace Mergen.Core.Entities
         public decimal Amount { get; set; }
         public long ShopItemId { get; set; }
         public ShopItem ShopItem { get; set; }
-        public PaymentState State { get; set; }
+        public PaymentStateIds State { get; set; }
         public string RedirectUrl { get; set; }
     }
 }

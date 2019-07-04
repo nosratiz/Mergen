@@ -1,8 +1,7 @@
-using System;
 using Mergen.Core.Entities.Base;
 using Newtonsoft.Json;
 
-namespace Mergen.Core.Data
+namespace Mergen.Core.Entities
 {
     public class Level : Entity
     {

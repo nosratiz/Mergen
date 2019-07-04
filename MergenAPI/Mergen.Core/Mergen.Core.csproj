@@ -27,4 +27,10 @@
     <PackageReference Include="SkiaSharp" Version="1.68.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="levels.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

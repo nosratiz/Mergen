@@ -8,7 +8,7 @@ using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mergen.Core.Services
+namespace Mergen.Core.GameServices
 {
     public class AchievementService
     {

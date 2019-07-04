@@ -1,4 +1,4 @@
-namespace Mergen.Core.Data
+namespace Mergen.Core.EntityIds
 {
     public enum BattleStateIds
     {

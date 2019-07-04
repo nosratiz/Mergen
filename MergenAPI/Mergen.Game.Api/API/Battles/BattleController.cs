@@ -8,6 +8,7 @@ using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
+using Mergen.Core.GameServices;
 using Mergen.Core.Managers;
 using Mergen.Core.Options;
 using Mergen.Core.Services;
@@ -175,7 +176,7 @@ namespace Mergen.Game.Api.API.Battles
                         return BadRequest();
                 }
 
-                game.GameState = game.CurrentTurnPlayerId == ((OneToOneBattle)game.Battle).Player1Id ? GameState.Player1AnswerQuestions : GameState.Player2AnswerQuestions;
+                game.GameState = game.CurrentTurnPlayerId == ((OneToOneBattle)game.Battle).Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
                 game.SelectedCategoryId = categoryId;
 
                 // add random questions to battle
@@ -248,7 +249,7 @@ namespace Mergen.Game.Api.API.Battles
             if (game == null)
                 return NotFound();
 
-            if (game.GameState == GameState.Completed || game.GameState == GameState.SelectCategory)
+            if (game.GameState == GameStateIds.Completed || game.GameState == GameStateIds.SelectCategory)
                 return BadRequest("invalid_gameState");
 
             /*            if (game.CurrentTurnPlayerId != playerId)
@@ -279,7 +280,7 @@ namespace Mergen.Game.Api.API.Battles
 
                 var selectedAnswer = answer.SelectedAnswer;
 
-                if (game.GameState == GameState.Player1AnswerQuestions)
+                if (game.GameState == GameStateIds.Player1AnswerQuestions)
                 {
                     if (gq.Player1SelectedAnswer.HasValue)
                         return BadRequest("invalid_answers", "question already answered.");
@@ -407,7 +408,7 @@ namespace Mergen.Game.Api.API.Battles
 
             if (game.GameQuestions.All(q => q.Player1SelectedAnswer.HasValue && q.Player2SelectedAnswer.HasValue))
             {
-                game.GameState = GameState.Completed;
+                game.GameState = GameStateIds.Completed;
 
                 var battle = await _dataContext.OneToOneBattles
                     .Include(q => q.Games)
@@ -415,7 +416,7 @@ namespace Mergen.Game.Api.API.Battles
                     .Include(q => q.Player2)
                     .FirstOrDefaultAsync(q => q.Id == game.BattleId, cancellationToken);
 
-                if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameState.Completed))
+                if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
                 {
                     // Battle Completed
 
@@ -521,7 +522,7 @@ namespace Mergen.Game.Api.API.Battles
 
                 var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
                 game.CurrentTurnPlayerId = nextPlayer?.Id;
-                game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameState.Player1AnswerQuestions : GameState.Player2AnswerQuestions;
+                game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
             }
 
             await _dataContext.SaveChangesAsync(cancellationToken);

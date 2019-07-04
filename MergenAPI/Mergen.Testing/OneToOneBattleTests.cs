@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Mergen.Core;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
+using Mergen.Core.GameServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mergen.Core.Data;
 using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 using Microsoft.EntityFrameworkCore;
 
-namespace Mergen.Core.Data
+namespace Mergen.Core.GameServices
 {
     public class GamingService
     {
@@ -31,7 +33,7 @@ namespace Mergen.Core.Data
                 pendingBattle.Player2Id = player1.Id;
                 battle = pendingBattle;
 
-                if (pendingBattle.LastGame != null && pendingBattle.LastGame.GameState == GameState.Player2AnswerQuestions)
+                if (pendingBattle.LastGame != null && pendingBattle.LastGame.GameState == GameStateIds.Player2AnswerQuestions)
                 {
                     pendingBattle.LastGame.CurrentTurnPlayerId = player1.Id;
                 }
@@ -76,7 +78,7 @@ namespace Mergen.Core.Data
             var game = new Game
             {
                 CurrentTurnPlayerId = player?.Id,
-                GameState = GameState.SelectCategory,
+                GameState = GameStateIds.SelectCategory,
                 Battle = battle
             };
 
@@ -110,7 +112,7 @@ namespace Mergen.Core.Data
                 return Result.Error(StatusCode.Forbidden);
 
             battle.LastGame.SelectedCategoryId = categoryId;
-            battle.LastGame.GameState = playerId == battle.Player1Id ? GameState.Player1AnswerQuestions : GameState.Player2AnswerQuestions;
+            battle.LastGame.GameState = playerId == battle.Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
 
             // add random questions to battle
             var questions = await _dataContext.QuestionCategories.Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);

@@ -6,6 +6,7 @@ using System.Transactions;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
+using Mergen.Core.GameServices;
 using Mergen.Core.Managers;
 using Mergen.Core.QueryProcessing;
 using Mergen.Core.Services;
@@ -62,7 +63,7 @@ namespace Mergen.Game.Api.API.Shop
             //TODO: Real online payment verification
             if (state == 0)
             {
-                payment.State = PaymentState.Paid;
+                payment.State = PaymentStateIds.Paid;
 
                 var accountItem = await _dataContext.AccountItems.FirstOrDefaultAsync(
                     q => q.AccountId == payment.AccountId && q.ItemTypeId == payment.ShopItem.TypeId,
@@ -101,12 +102,12 @@ namespace Mergen.Game.Api.API.Shop
             }
             else
             {
-                payment.State = PaymentState.Failed;
+                payment.State = PaymentStateIds.Failed;
             }
 
             await _dataContext.SaveChangesAsync(cancellationToken);
 
-            return Redirect($"{payment.RedirectUrl}?isSuccess={(payment.State == PaymentState.Paid ? "true" : "false")}");
+            return Redirect($"{payment.RedirectUrl}?isSuccess={(payment.State == PaymentStateIds.Paid ? "true" : "false")}");
         }
 
         [HttpPost]
@@ -132,7 +133,7 @@ namespace Mergen.Game.Api.API.Shop
                 Amount = shopItem.Price * shopItem.Quantity.Value,
                 ShopItemId = shopItem.Id,
                 CreationDateTime = DateTime.UtcNow,
-                State = PaymentState.Created,
+                State = PaymentStateIds.Created,
                 RedirectUrl = inputModel.RedirectUrl
             };
 

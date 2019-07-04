@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 
-namespace Mergen.Core.Data
+namespace Mergen.Core.Entities
 {
     public class OneToOneBattle : Battle
     {

@@ -1,6 +1,4 @@
-using Mergen.Core.Entities;
-
-namespace Mergen.Core.Data
+namespace Mergen.Core.Entities
 {
     public class GameCategory
     {

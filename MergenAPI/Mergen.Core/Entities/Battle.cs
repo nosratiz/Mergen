@@ -1,7 +1,7 @@
 using System;
 using Mergen.Core.Entities.Base;
 
-namespace Mergen.Core.Data
+namespace Mergen.Core.Entities
 {
     public class Battle : Entity
     {

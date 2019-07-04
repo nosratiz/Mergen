@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Mergen.Core.Data;
+using Mergen.Core.Entities;
 
 namespace Mergen.Game.Api.API.Battles
 {

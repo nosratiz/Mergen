@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Mergen.Core.Data;
+using Mergen.Core.Entities;
 using Newtonsoft.Json;
 
 namespace Mergen.Core.Managers

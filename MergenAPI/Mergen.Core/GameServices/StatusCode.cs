@@ -1,4 +1,4 @@
-namespace Mergen.Core.Data
+namespace Mergen.Core.GameServices
 {
     public enum StatusCode
     {

@@ -1,4 +1,6 @@
 using Mergen.Core.Data;
+using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 
 namespace Mergen.Game.Api.API.Battles
 {

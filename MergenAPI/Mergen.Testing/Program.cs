@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Core;
 using Mergen.Core.Data;
+using Mergen.Core.GameServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.Configuration.Memory;

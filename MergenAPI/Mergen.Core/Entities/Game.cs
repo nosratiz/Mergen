@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Mergen.Core.Entities;
 using Mergen.Core.Entities.Base;
+using Mergen.Core.EntityIds;
 
-namespace Mergen.Core.Data
+namespace Mergen.Core.Entities
 {
     public class Game : Entity
     {
@@ -25,7 +25,7 @@ namespace Mergen.Core.Data
         public ICollection<GameCategory> GameCategories { get; set; }
         public ICollection<GameQuestion> GameQuestions { get; set; }
 
-        public GameState GameState { get; set; }
+        public GameStateIds GameState { get; set; }
         public int Score { get; set; }
     }
 }

@@ -12,7 +12,7 @@ namespace Mergen.Game.Api.API.Battles
         public IEnumerable<QuestionViewModel> Questions { get; set; }
         public int CurrentTurnPlayerId { get; set; }
 
-        public static GameViewModel Map(Core.Data.Game game)
+        public static GameViewModel Map(Core.Entities.Game game)
         {
             var vm = Mapper.Map<GameViewModel>(game);
             vm.AvailableCategories = game.GameCategories.Select(q => CategoryViewModel.Map(q.Category));
@@ -26,7 +26,7 @@ namespace Mergen.Game.Api.API.Battles
             return vm;
         }
 
-        public static IEnumerable<GameViewModel> Map(IEnumerable<Core.Data.Game> games)
+        public static IEnumerable<GameViewModel> Map(IEnumerable<Core.Entities.Game> games)
         {
             return games.Select(Map);
         }
