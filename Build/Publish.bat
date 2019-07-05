@@ -1,0 +1,1 @@
+dotnet run --target=GameAPI.Publish,AdminAPI.Publish
