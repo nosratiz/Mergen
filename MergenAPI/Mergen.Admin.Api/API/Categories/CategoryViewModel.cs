@@ -21,7 +21,7 @@ namespace Mergen.Admin.Api.API.Categories
                 IsArchived =  category.IsArchived,
                 Title = category.Title,
                 Description = category.Description,
-                StatusId = category.StatusId.ToString(),
+                StatusId = ((int)category.StatusId).ToString(),
                 CoverImageFileId = category.CoverImageFileId,
                 IconFileId = category.IconFileId
             };
