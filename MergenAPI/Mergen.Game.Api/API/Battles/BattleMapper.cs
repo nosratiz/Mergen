@@ -23,7 +23,7 @@ namespace Mergen.Game.Api.API.Battles
             vm.Player1MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);
 
             if (battle.Player2Id.HasValue)
-                vm.Player2MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);
+                vm.Player2MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player2Id.Value, cancellationToken);
 
             return vm;
         }
