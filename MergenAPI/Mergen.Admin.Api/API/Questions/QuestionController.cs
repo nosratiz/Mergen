@@ -84,6 +84,8 @@ namespace Mergen.Admin.Api.API.Questions
             var categoryId = inputModel.CategoryId.ToLong();
             var questions = new List<Question>();
 
+            var errors = new List<string>();
+
             using (var p = new ExcelPackage(inputModel.File.OpenReadStream()))
             {
                 foreach (var ws in p.Workbook.Worksheets)
@@ -100,6 +102,12 @@ namespace Mergen.Admin.Api.API.Questions
                         question.Answer3 = ws.Cells[i, 5].GetValue<string>();
                         question.Answer4 = ws.Cells[i, 6].GetValue<string>();
                         var r = ws.Cells[i, 7].GetValue<string>();
+
+                        if (r == null)
+                        {
+                            errors.Add($"Answer cell is empty. row:{i}");
+                            continue;
+                        }
 
                         if (r.StartsWith("A", StringComparison.OrdinalIgnoreCase) || string.Equals(r, question.Answer1))
                         {
@@ -119,7 +127,8 @@ namespace Mergen.Admin.Api.API.Questions
                         }
                         else
                         {
-                            return BadRequest("invalid_question", $"Correct answer of question not found. row:{i}");
+                            errors.Add($"Correct answer of question not found. row:{i}");
+                            continue;
                         }
 
                         _questionManager.SetQuestionCategory(question, categoryId);
@@ -129,7 +138,7 @@ namespace Mergen.Admin.Api.API.Questions
                 }
             }
 
-            return OkData(QuestionViewModel.MapAll(questions));
+            return OkData(QuestionViewModel.MapAll(questions), new { Errors = errors });
         }
 
         [HttpPut]
