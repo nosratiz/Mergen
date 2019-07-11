@@ -10,7 +10,5 @@ namespace Mergen.Core.Entities
 
         public int? Player1SelectedAnswer { get; set; }
         public int? Player2SelectedAnswer { get; set; }
-
-        public int Score { get; set; }
     }
 }

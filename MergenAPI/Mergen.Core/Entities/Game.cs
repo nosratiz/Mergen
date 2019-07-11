@@ -26,6 +26,5 @@ namespace Mergen.Core.Entities
         public ICollection<GameQuestion> GameQuestions { get; set; }
 
         public GameStateIds GameState { get; set; }
-        public int Score { get; set; }
     }
 }

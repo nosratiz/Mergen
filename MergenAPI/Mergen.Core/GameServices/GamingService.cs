@@ -95,6 +95,7 @@ namespace Mergen.Core.GameServices
                 }
             }
 
+            battle.Games.Add(game);
             _dataContext.Games.Add(game);
             return game;
         }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Mergen.Core.Entities;
+using Mergen.Core.EntityIds;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -11,18 +12,19 @@ namespace Mergen.Game.Api.API.Battles
         public IEnumerable<CategoryViewModel> AvailableCategories { get; set; }
         public IEnumerable<QuestionViewModel> Questions { get; set; }
         public int CurrentTurnPlayerId { get; set; }
+        public GameStateIds GameState { get; set; }
 
         public static GameViewModel Map(Core.Entities.Game game)
         {
             var vm = Mapper.Map<GameViewModel>(game);
             vm.AvailableCategories = game.GameCategories.Select(q => CategoryViewModel.Map(q.Category));
-            vm.Questions = game.GameQuestions.Select(q =>
+            vm.Questions = game.GameQuestions.Where(q => q.Question != null).Select(q =>
             {
                 var model = QuestionViewModel.Map(q.Question);
                 model.Player1SelectedAnswer = q.Player1SelectedAnswer;
                 model.Player2SelectedAnswer = q.Player2SelectedAnswer;
                 return model;
-            });
+            }).ToList();
             return vm;
         }
 
@@ -55,9 +57,13 @@ namespace Mergen.Game.Api.API.Battles
         public string Body { get; set; }
         public int Difficulty { get; set; }
         public string Answer1 { get; set; }
+        public long Answer1ChooseHistory { get; set; }
         public string Answer2 { get; set; }
+        public long Answer2ChooseHistory { get; set; }
         public string Answer3 { get; set; }
+        public long Answer3ChooseHistory { get; set; }
         public string Answer4 { get; set; }
+        public long Answer4ChooseHistory { get; set; }
         public int CorrectAnswerNumber { get; set; }
         public int? Player1SelectedAnswer { get; set; }
         public int? Player2SelectedAnswer { get; set; }

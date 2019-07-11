@@ -1,5 +1,8 @@
+using System;
+
 namespace Mergen.Core.EntityIds
 {
+    [Flags]
     public enum GameStateIds
     {
         SelectCategory = 1,

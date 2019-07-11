@@ -121,6 +121,12 @@ namespace Mergen.Game.Api.API.Battles
                 .Include(q => q.Games).ThenInclude(q => q.GameQuestions).ThenInclude(q => q.Question)
                 .FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
 
+            if (battle == null)
+                return NotFound();
+
+            if (battle.Player1Id != AccountId && battle.Player2Id != AccountId)
+                return Forbidden();
+
             return OkData(GameViewModel.Map(battle.Games));
         }
 
@@ -145,8 +151,12 @@ namespace Mergen.Game.Api.API.Battles
                 .Include(q => q.Battle)
                 .Include(q => q.GameCategories).ThenInclude(q => q.Category)
                 .FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+
             if (game == null)
                 return NotFound();
+
+            if (game.CurrentTurnPlayerId != AccountId)
+                return BadRequest("invalid_player_turn");
 
             if (game.SelectedCategoryId != null)
                 return BadRequest("already_selected");
@@ -180,11 +190,12 @@ namespace Mergen.Game.Api.API.Battles
                 game.SelectedCategoryId = categoryId;
 
                 // add random questions to battle
-                var questions = await _dataContext.QuestionCategories.Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
+                var questions = await _dataContext.QuestionCategories.Include(q => q.Question).Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
                 var gameQuestions = questions.Select(q => new GameQuestion
                 {
                     GameId = game.Id,
-                    QuestionId = q.QuestionId
+                    QuestionId = q.QuestionId,
+                    Question = q.Question
                 });
                 game.GameQuestions = gameQuestions.ToList();
 
@@ -240,292 +251,299 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult> AnswerGameQuestions([FromRoute]long gameId, [FromBody]AnswerGameQuestionsInputModel inputModel,
             CancellationToken cancellationToken)
         {
-            var game = await _dataContext.Games
-                .Include(q => q.GameQuestions)
-                .ThenInclude(q => q.Question)
-                .ThenInclude(q => q.QuestionCategories)
-                .FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
-
-            if (game == null)
-                return NotFound();
-
-            if (game.GameState == GameStateIds.Completed || game.GameState == GameStateIds.SelectCategory)
-                return BadRequest("invalid_gameState");
-
-            /*            if (game.CurrentTurnPlayerId != playerId)
-                            return BadRequest("invalid_turn");*/
-
-            var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId, cancellationToken);
-            if (playerStat == null)
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
-                playerStat = new AccountStatsSummary
+                var game = await _dataContext.Games
+            .Include(q => q.GameQuestions)
+            .ThenInclude(q => q.Question)
+            .ThenInclude(q => q.QuestionCategories)
+            .FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
+
+                if (game == null)
+                    return NotFound();
+
+                if (game.GameState == GameStateIds.Completed || game.GameState == GameStateIds.SelectCategory)
+                    return BadRequest("invalid_gameState");
+
+                if (game.CurrentTurnPlayerId != AccountId)
+                    return BadRequest("invalid_turn");
+
+                var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId, cancellationToken);
+                if (playerStat == null)
                 {
-                    AccountId = game.CurrentTurnPlayerId.Value
-                };
-
-                _dataContext.AccountStatsSummaries.Add(playerStat);
-            }
-
-            if (inputModel.Answers.Count() != game.GameQuestions.Count)
-                return BadRequest("invalid_answersCount");
-
-            var changedCategoryStats = new List<AccountCategoryStat>();
-
-            foreach (var answer in inputModel.Answers)
-            {
-                var gq = game.GameQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
-
-                if (gq == null)
-                    return BadRequest("invalid_answers", "no such question in this game.");
-
-                var selectedAnswer = answer.SelectedAnswer;
-
-                if (game.GameState == GameStateIds.Player1AnswerQuestions)
-                {
-                    if (gq.Player1SelectedAnswer.HasValue)
-                        return BadRequest("invalid_answers", "question already answered.");
-
-                    gq.Player1SelectedAnswer = selectedAnswer;
-                }
-                else
-                {
-                    if (gq.Player2SelectedAnswer.HasValue)
-                        return BadRequest("invalid_answers", "question already answered.");
-
-                    gq.Player2SelectedAnswer = selectedAnswer;
-                }
-
-                if (gq.Question.CorrectAnswerNumber == selectedAnswer)
-                {
-                    gq.Score = 1;
-                    game.Score += 1;
-                }
-                else
-                    gq.Score = 0;
-
-                switch (selectedAnswer)
-                {
-                    case 1:
-                        gq.Question.Answer1ChooseHistory++;
-                        break;
-                    case 2:
-                        gq.Question.Answer2ChooseHistory++;
-                        break;
-                    case 3:
-                        gq.Question.Answer3ChooseHistory++;
-                        break;
-                    case 4:
-                        gq.Question.Answer4ChooseHistory++;
-                        break;
-                }
-
-                // Process Category stats for player
-                foreach (var category in gq.Question.QuestionCategories)
-                {
-                    var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.CategoryId == category.Id, cancellationToken);
-                    if (playerCategoryStat == null)
+                    playerStat = new AccountStatsSummary
                     {
-                        playerCategoryStat = new AccountCategoryStat
-                        {
-                            AccountId = game.CurrentTurnPlayerId.Value,
-                            CategoryId = category.Id
-                        };
+                        AccountId = game.CurrentTurnPlayerId.Value
+                    };
 
-                        _dataContext.AccountCategoryStats.Add(playerCategoryStat);
-                        changedCategoryStats.Add(playerCategoryStat);
-                    }
-
-                    playerCategoryStat.TotalQuestionsCount += 1;
-                    playerCategoryStat.CorrectAnswersCount += gq.Score;
+                    _dataContext.AccountStatsSummaries.Add(playerStat);
                 }
 
-                if (answer.UsedAnswersHistoryHelper)
+                if (inputModel.Answers.Count() != game.GameQuestions.Count)
+                    return BadRequest("invalid_answersCount");
+
+                var changedCategoryStats = new List<AccountCategoryStat>();
+
+                foreach (var answer in inputModel.Answers)
                 {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
-                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AnswersHistoryHelperPrice)
+                    var gq = game.GameQuestions.FirstOrDefault(q => q.QuestionId == answer.QuestionId);
+
+                    if (gq == null)
+                        return BadRequest("invalid_answers", "no such question in this game.");
+
+                    var selectedAnswer = answer.SelectedAnswer;
+
+                    if (game.GameState == GameStateIds.Player1AnswerQuestions)
                     {
-                        // TODO: cheat detected
-                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
-                    }
+                        if (gq.Player1SelectedAnswer.HasValue)
+                            return BadRequest("invalid_answers", "question already answered.");
 
-                    accountCoin.Quantity -= _gameSettingsOptions.AnswersHistoryHelperPrice;
-                }
-
-                if (answer.UsedRemoveTwoAnswersHelper)
-                {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
-                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.RemoveTwoAnswersHelperPrice)
-                    {
-                        // TODO: cheat detected
-                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
-                    }
-
-                    accountCoin.Quantity -= _gameSettingsOptions.RemoveTwoAnswersHelperPrice;
-                    playerStat.RemoveTwoAnswersHelperUsageCount += 1;
-                }
-
-                if (answer.UsedAskMergenHelper)
-                {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
-                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AskMergenHelperPrice)
-                    {
-                        // TODO: cheat detected
-                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
-                    }
-
-                    accountCoin.Quantity -= _gameSettingsOptions.AskMergenHelperPrice;
-                    playerStat.AskMergenHelperUsageCount += 1;
-                }
-
-                if (answer.UsedDoubleChanceHelper)
-                {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
-                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.DoubleChanceHelperPrice)
-                    {
-                        // TODO: cheat detected
-                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
-                    }
-
-                    accountCoin.Quantity -= _gameSettingsOptions.DoubleChanceHelperPrice;
-                    playerStat.DoubleChanceHelperUsageCount += 1;
-                }
-
-                if (answer.TimeExtenderHelperUsageCount > 0)
-                {
-                    var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
-                    if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount)
-                    {
-                        // TODO: cheat detected
-                        return BadRequest("insufficient_funds", "insufficient funds to use this helper");
-                    }
-
-                    accountCoin.Quantity -= _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount;
-                    playerStat.TimeExtenderHelperUsageCount += 1;
-                }
-            }
-
-            await _achievementService.ProcessAnswerTimeAchievementsAsync(playerStat, changedCategoryStats, cancellationToken);
-
-            if (game.GameQuestions.All(q => q.Player1SelectedAnswer.HasValue && q.Player2SelectedAnswer.HasValue))
-            {
-                game.GameState = GameStateIds.Completed;
-
-                var battle = await _dataContext.OneToOneBattles
-                    .Include(q => q.Games)
-                    .Include(q => q.Player1)
-                    .Include(q => q.Player2)
-                    .FirstOrDefaultAsync(q => q.Id == game.BattleId, cancellationToken);
-
-                if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
-                {
-                    // Battle Completed
-
-                    battle.BattleStateId = BattleStateIds.Completed;
-                    int player1CorrectAnswersCount = 0;
-                    int player2CorrectAnswersCount = 0;
-                    foreach (var battleGame in battle.Games)
-                    {
-                        if (battleGame.CurrentTurnPlayerId == battle.Player1Id)
-                        {
-                            player1CorrectAnswersCount += battleGame.Score;
-                        }
-                        else
-                        {
-                            player2CorrectAnswersCount += battleGame.Score;
-                        }
-                    }
-
-                    battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
-                    battle.Player2CorrectAnswersCount = player2CorrectAnswersCount;
-
-                    if (player1CorrectAnswersCount > player2CorrectAnswersCount)
-                        battle.WinnerPlayerId = battle.Player1Id;
-                    else if (player2CorrectAnswersCount > player1CorrectAnswersCount)
-                        battle.WinnerPlayerId = battle.Player2Id;
-
-                    var playersStats = await _dataContext.AccountStatsSummaries
-                        .Where(q => q.AccountId == battle.Player1Id || q.AccountId == battle.Player2Id)
-                        .ToDictionaryAsync(q => q.AccountId, q => q, cancellationToken);
-
-                    var player1Stats = playersStats[battle.Player1Id];
-                    var player2Stats = playersStats[battle.Player2Id.Value];
-
-                    player1Stats.TotalBattlesPlayed += 1;
-                    player2Stats.TotalBattlesPlayed += 1;
-
-                    if (battle.WinnerPlayerId == battle.Player1Id)
-                    {
-                        player1Stats.WinCount += 1;
-                        player2Stats.LoseCount += 1;
-
-                        if (player1CorrectAnswersCount == 15)
-                            player1Stats.AceWinCount += 1;
-
-                        // Experience for win
-                        player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
-                        player1Stats.Coins += player1CorrectAnswersCount + CoinBase * WinCoinMultiplier;
-
-                        // Experience for lose
-                        player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
-                        player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
-
-                    }
-                    else if (battle.WinnerPlayerId == battle.Player2Id)
-                    {
-                        player1Stats.LoseCount += 1;
-                        player2Stats.WinCount += 1;
-
-                        if (player2CorrectAnswersCount == 15)
-                            player2Stats.AceWinCount += 1;
-
-                        // Experience for win
-                        player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
-                        player2Stats.Coins += player2CorrectAnswersCount + CoinBase * WinCoinMultiplier;
-
-                        // Experience for lose
-                        player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
-                        player1Stats.Coins += player1CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
+                        gq.Player1SelectedAnswer = selectedAnswer;
                     }
                     else
                     {
-                        // Exprience for draw (drop)
+                        if (gq.Player2SelectedAnswer.HasValue)
+                            return BadRequest("invalid_answers", "question already answered.");
 
-                        player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
-                        player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
+                        gq.Player2SelectedAnswer = selectedAnswer;
                     }
 
-                    player1Stats.Level = _levelManager.GetLevel(player1Stats.Score)?.LevelNumber ?? 0;
-                    player2Stats.Level = _levelManager.GetLevel(player2Stats.Score)?.LevelNumber ?? 0;
+                    var score = gq.Question.CorrectAnswerNumber == selectedAnswer ? 1 : 0;
 
-                    player1Stats.WinRatio = player1Stats.WinCount / (float)player1Stats.TotalBattlesPlayed;
-                    player2Stats.WinRatio = player2Stats.WinCount / (float)player2Stats.TotalBattlesPlayed;
+                    switch (selectedAnswer)
+                    {
+                        case 1:
+                            gq.Question.Answer1ChooseHistory++;
+                            break;
+                        case 2:
+                            gq.Question.Answer2ChooseHistory++;
+                            break;
+                        case 3:
+                            gq.Question.Answer3ChooseHistory++;
+                            break;
+                        case 4:
+                            gq.Question.Answer4ChooseHistory++;
+                            break;
+                    }
 
-                    player1Stats.LoseRatio = player1Stats.LoseCount / (float)player1Stats.TotalBattlesPlayed;
-                    player2Stats.LoseRatio = player2Stats.LoseCount / (float)player2Stats.TotalBattlesPlayed;
+                    // Process Category stats for player
+                    foreach (var category in gq.Question.QuestionCategories)
+                    {
+                        var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.CategoryId == category.Id, cancellationToken);
+                        if (playerCategoryStat == null)
+                        {
+                            playerCategoryStat = new AccountCategoryStat
+                            {
+                                AccountId = game.CurrentTurnPlayerId.Value,
+                                CategoryId = category.CategoryId
+                            };
 
-                    await _achievementService.ProcessBattleAchievementsAsync(battle, player1Stats, player2Stats,
-                        cancellationToken);
+                            _dataContext.AccountCategoryStats.Add(playerCategoryStat);
+                            changedCategoryStats.Add(playerCategoryStat);
+                        }
+
+                        playerCategoryStat.TotalQuestionsCount += 1;
+                        playerCategoryStat.CorrectAnswersCount += score;
+                    }
+
+                    if (answer.UsedAnswersHistoryHelper)
+                    {
+                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AnswersHistoryHelperPrice)
+                        {
+                            // TODO: cheat detected
+                            return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                        }
+
+                        accountCoin.Quantity -= _gameSettingsOptions.AnswersHistoryHelperPrice;
+                    }
+
+                    if (answer.UsedRemoveTwoAnswersHelper)
+                    {
+                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.RemoveTwoAnswersHelperPrice)
+                        {
+                            // TODO: cheat detected
+                            return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                        }
+
+                        accountCoin.Quantity -= _gameSettingsOptions.RemoveTwoAnswersHelperPrice;
+                        playerStat.RemoveTwoAnswersHelperUsageCount += 1;
+                    }
+
+                    if (answer.UsedAskMergenHelper)
+                    {
+                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AskMergenHelperPrice)
+                        {
+                            // TODO: cheat detected
+                            return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                        }
+
+                        accountCoin.Quantity -= _gameSettingsOptions.AskMergenHelperPrice;
+                        playerStat.AskMergenHelperUsageCount += 1;
+                    }
+
+                    if (answer.UsedDoubleChanceHelper)
+                    {
+                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.DoubleChanceHelperPrice)
+                        {
+                            // TODO: cheat detected
+                            return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                        }
+
+                        accountCoin.Quantity -= _gameSettingsOptions.DoubleChanceHelperPrice;
+                        playerStat.DoubleChanceHelperUsageCount += 1;
+                    }
+
+                    if (answer.TimeExtenderHelperUsageCount > 0)
+                    {
+                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount)
+                        {
+                            // TODO: cheat detected
+                            return BadRequest("insufficient_funds", "insufficient funds to use this helper");
+                        }
+
+                        accountCoin.Quantity -= _gameSettingsOptions.TimeExtenderHelperPrice * answer.TimeExtenderHelperUsageCount;
+                        playerStat.TimeExtenderHelperUsageCount += 1;
+                    }
+                }
+
+                await _achievementService.ProcessAnswerTimeAchievementsAsync(playerStat, changedCategoryStats, cancellationToken);
+
+                var gameBattleId = game.BattleId;
+                if (game.GameQuestions.All(q => q.Player1SelectedAnswer.HasValue && q.Player2SelectedAnswer.HasValue))
+                {
+                    game.GameState = GameStateIds.Completed;
+
+                    var battle = await _dataContext.OneToOneBattles
+                        .Include(q => q.Games).ThenInclude(q => q.GameQuestions).ThenInclude(q => q.Question)
+                        .Include(q => q.Player1)
+                        .Include(q => q.Player2)
+                        .FirstOrDefaultAsync(q => q.Id == gameBattleId, cancellationToken);
+
+                    if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
+                    {
+                        // Battle Completed
+
+                        battle.BattleStateId = BattleStateIds.Completed;
+                        int player1CorrectAnswersCount = 0;
+                        int player2CorrectAnswersCount = 0;
+                        foreach (var battleGame in battle.Games)
+                        {
+                            if (battleGame.CurrentTurnPlayerId == battle.Player1Id)
+                            {
+                                player1CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player1SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
+                            }
+                            else
+                            {
+                                player2CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
+                            }
+                        }
+
+                        battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
+                        battle.Player2CorrectAnswersCount = player2CorrectAnswersCount;
+
+                        if (player1CorrectAnswersCount > player2CorrectAnswersCount)
+                            battle.WinnerPlayerId = battle.Player1Id;
+                        else if (player2CorrectAnswersCount > player1CorrectAnswersCount)
+                            battle.WinnerPlayerId = battle.Player2Id;
+
+                        var playersStats = await _dataContext.AccountStatsSummaries
+                            .Where(q => q.AccountId == battle.Player1Id || q.AccountId == battle.Player2Id)
+                            .ToDictionaryAsync(q => q.AccountId, q => q, cancellationToken);
+
+                        var player1Stats = playersStats[battle.Player1Id];
+                        var player2Stats = playersStats[battle.Player2Id.Value];
+
+                        player1Stats.TotalBattlesPlayed += 1;
+                        player2Stats.TotalBattlesPlayed += 1;
+
+                        if (battle.WinnerPlayerId == battle.Player1Id)
+                        {
+                            player1Stats.WinCount += 1;
+                            player2Stats.LoseCount += 1;
+
+                            if (player1CorrectAnswersCount == 15)
+                                player1Stats.AceWinCount += 1;
+
+                            // Experience for win
+                            player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
+                            player1Stats.Coins += player1CorrectAnswersCount + CoinBase * WinCoinMultiplier;
+
+                            // Experience for lose
+                            player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
+                            player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
+
+                        }
+                        else if (battle.WinnerPlayerId == battle.Player2Id)
+                        {
+                            player1Stats.LoseCount += 1;
+                            player2Stats.WinCount += 1;
+
+                            if (player2CorrectAnswersCount == 15)
+                                player2Stats.AceWinCount += 1;
+
+                            // Experience for win
+                            player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
+                            player2Stats.Coins += player2CorrectAnswersCount + CoinBase * WinCoinMultiplier;
+
+                            // Experience for lose
+                            player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
+                            player1Stats.Coins += player1CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
+                        }
+                        else
+                        {
+                            // Exprience for draw (drop)
+
+                            player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
+                            player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * DrawExperienceMultiplier;
+                        }
+
+                        player1Stats.Level = _levelManager.GetLevel(player1Stats.Score)?.LevelNumber ?? 0;
+                        player2Stats.Level = _levelManager.GetLevel(player2Stats.Score)?.LevelNumber ?? 0;
+
+                        player1Stats.WinRatio = player1Stats.WinCount / (float)player1Stats.TotalBattlesPlayed;
+                        player2Stats.WinRatio = player2Stats.WinCount / (float)player2Stats.TotalBattlesPlayed;
+
+                        player1Stats.LoseRatio = player1Stats.LoseCount / (float)player1Stats.TotalBattlesPlayed;
+                        player2Stats.LoseRatio = player2Stats.LoseCount / (float)player2Stats.TotalBattlesPlayed;
+
+                        await _achievementService.ProcessBattleAchievementsAsync(battle, player1Stats, player2Stats,
+                            cancellationToken);
+
+
+                        await _dataContext.SaveChangesAsync(cancellationToken);
+
+                        // Calculate Sky
+                        player1Stats.Sky = await CalculatePlayerSkyAsync(battle.Player1Id, cancellationToken);
+                        player2Stats.Sky = await CalculatePlayerSkyAsync(battle.Player2Id.Value, cancellationToken);
+                    }
+                    else
+                    {
+                        var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
+                        var newGame = await _gamingService.CreateGameAsync(battle, nextPlayer, cancellationToken);
+                        battle.LastGame = newGame;
+                    }
                 }
                 else
                 {
+                    var battle = await _dataContext.OneToOneBattles
+                        .Include(q => q.Player1)
+                        .Include(q => q.Player2)
+                        .FirstOrDefaultAsync(q => q.Id == gameBattleId, cancellationToken);
+
                     var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
-                    var newGame = await _gamingService.CreateGameAsync(battle, nextPlayer, cancellationToken);
-                    battle.LastGame = newGame;
+                    game.CurrentTurnPlayerId = nextPlayer?.Id;
+                    game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
                 }
-            }
-            else
-            {
-                var battle = await _dataContext.OneToOneBattles
-                    .Include(q => q.Player1)
-                    .Include(q => q.Player2)
-                    .FirstOrDefaultAsync(q => q.Id == game.BattleId, cancellationToken);
 
-                var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
-                game.CurrentTurnPlayerId = nextPlayer?.Id;
-                game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
+                await _dataContext.SaveChangesAsync(cancellationToken);
+                transaction.Complete();
             }
 
-            await _dataContext.SaveChangesAsync(cancellationToken);
             return Ok();
         }
 
@@ -583,13 +601,8 @@ namespace Mergen.Game.Api.API.Battles
             return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Ignored, cancellationToken);
         }
 
-        [HttpPost]
-        [Route("sky")]
-        public async Task<IActionResult> CalcSkyAsync(long accountId, CancellationToken cancellationToken)
+        private async Task<int> CalculatePlayerSkyAsync(long accountId, CancellationToken cancellationToken)
         {
-            if (AccountId != accountId)
-                return Forbidden();
-
             var battleCorrectAnswersCount = await _dataContext.OneToOneBattles
                 .Where(q => q.Player1Id == accountId || q.Player2Id == accountId)
                 .GroupBy(q => q.Player1Id == accountId ? q.Player1CorrectAnswersCount : q.Player2CorrectAnswersCount)
@@ -599,7 +612,9 @@ namespace Mergen.Game.Api.API.Battles
 
             int sky;
 
-            var averageAnswersCountIn70PercentOfBattles = Math.Round(battleCorrectAnswersCount.OrderByDescending(q => q.CorrectAnswersCount).Take((int)(totalBattlesCount * 0.7f)).Average(q => q.CorrectAnswersCount), 0);
+            var averageAnswersCountIn70PercentOfBattles = Math.Round(
+                battleCorrectAnswersCount.OrderByDescending(q => q.CorrectAnswersCount).Take((int)(totalBattlesCount * 0.7f))
+                    .Average(q => q.CorrectAnswersCount), 0);
             if (averageAnswersCountIn70PercentOfBattles >= 14)
                 sky = 7;
             else if (averageAnswersCountIn70PercentOfBattles >= 13)
@@ -616,8 +631,7 @@ namespace Mergen.Game.Api.API.Battles
                 sky = 1;
             else
                 sky = 0;
-
-            return Ok(sky);
+            return sky;
         }
 
         private async Task<IActionResult> ChangeBattleInvitationStatus(long battleInvitationId, BattleInvitationStatus status, CancellationToken cancellationToken)
