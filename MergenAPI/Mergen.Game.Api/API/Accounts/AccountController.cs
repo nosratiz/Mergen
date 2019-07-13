@@ -61,6 +61,7 @@ namespace Mergen.Game.Api.API.Accounts
             account.SearchableByEmailAddressOrUsername = true;
             account.FriendsOnlyBattleInvitations = false;
             account.Nickname = account.Email.Substring(0, account.Email.IndexOf('@'));
+            account.RegisterDateTime = DateTime.UtcNow;
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
             var accountStats = new AccountStatsSummary

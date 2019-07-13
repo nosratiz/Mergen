@@ -91,6 +91,7 @@ namespace Mergen.Admin.Api.API.Accounts
             account.ReceiveNotifications = true;
             account.SearchableByEmailAddressOrUsername = true;
             account.FriendsOnlyBattleInvitations = false;
+            account.RegisterDateTime = DateTime.UtcNow;
 
             using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {

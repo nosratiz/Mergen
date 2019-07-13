@@ -22,6 +22,7 @@ namespace Mergen.Game.Api.API.Accounts
         public bool IsEmailVerified { get; set; }
         public bool IsPhoneNumberVerified { get; set; }
         public string Timezone { get; set; }
+        public DateTime RegisterDateTime { get; set; }
         public IEnumerable<string> AvatarItemIds { get; set; }
         public IEnumerable<string> RoleIds { get; set; }
         public bool ReceiveNotifications { get; set; }
@@ -46,6 +47,7 @@ namespace Mergen.Game.Api.API.Accounts
             model.CoverImageId = account.CoverImageId;
             model.AvatarImageId = account.AvatarImageId;
             model.Timezone = account.Timezone;
+            model.RegisterDateTime = account.RegisterDateTime;
             model.AvatarItemIds = account.AvatarItemIds != null ? JsonConvert.DeserializeObject<long[]>(account.AvatarItemIds).Select(q => q.ToString()) : new string[0];
             model.RoleIds = account.RoleIds != null ? JsonConvert.DeserializeObject<long[]>(account.RoleIds).Select(q => q.ToString()) : new string[0];
             model.ReceiveNotifications = account.ReceiveNotifications;
