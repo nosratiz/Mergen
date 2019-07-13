@@ -13,6 +13,7 @@ using Mergen.Core.Options;
 using Mergen.Core.QueryProcessing;
 using Mergen.Core.Security;
 using Mergen.Core.Services;
+using Mergen.Game.Api.Helpers;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -446,6 +447,26 @@ namespace Mergen.Game.Api.API.Accounts
 
             await _accountManager.ArchiveAsync(account, cancellationToken);
             return Ok();
+        }
+
+        [HttpGet]
+        [Route("accounts/{accountId}/achievements")]
+        public async Task<ActionResult<ApiResultViewModel<AchievementViewModel>>> GetAchievementsByAccountIdAsync(
+            [FromRoute] string accountId, CancellationToken cancellationToken)
+        {
+            var accId = accountId.ToLong();
+
+            var result = await (from achievementType in _dataContext.AchievementTypes.Where(q=>q.IsArchived == false)
+                                join achievement in _dataContext.Achievements.Where(q => q.AccountId == accId) on achievementType.Id equals achievement.AchievementTypeId
+                                    into accountAchievement
+                                from a in accountAchievement.DefaultIfEmpty()
+                                select new AchievementViewModel
+                                {
+                                    AchievementType = AchievementTypeViewModel.Map(achievementType),
+                                    IsAchieved = a != null
+                                }).ToListAsync(cancellationToken);
+
+            return OkData(result);
         }
     }
 }
