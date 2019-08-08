@@ -12,6 +12,7 @@ using Mergen.Core.GameServices;
 using Mergen.Core.Managers;
 using Mergen.Core.Options;
 using Mergen.Core.Services;
+using Mergen.Game.Api.Helpers;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -52,7 +53,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetActiveBattles([Required]long accountId, CancellationToken cancellationToken)
         {
             var activeBattles = await _dataContext.OneToOneBattles.AsNoTracking()
-                .Where(q => (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired)
+                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired)
                 .ToListAsync(cancellationToken);
 
             return OkData(await _battleMapper.MapAllAsync(activeBattles, cancellationToken));
@@ -63,7 +64,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetRecentBattles(long accountId, CancellationToken cancellationToken)
         {
             var recentBattles = await _dataContext.OneToOneBattles
-                .Where(q => (q.Player1Id == accountId || q.Player2Id == accountId) &&
+                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) &&
                             (q.BattleStateId == BattleStateIds.Completed || q.BattleStateId == BattleStateIds.Expired))
                 .ToListAsync(cancellationToken);
 
@@ -105,7 +106,7 @@ namespace Mergen.Game.Api.API.Battles
 
         [HttpGet]
         [Route("battles/{battleId}")]
-        public async Task<ActionResult<ApiResultViewModel<BattleViewModel>>> GetBattleById(long battleId, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<OneToOneBattleViewModel>>> GetBattleById(long battleId, CancellationToken cancellationToken)
         {
             var battle = await _dataContext.OneToOneBattles.FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
             return OkData(await _battleMapper.MapAsync(battle, cancellationToken));
@@ -145,8 +146,11 @@ namespace Mergen.Game.Api.API.Battles
 
         [HttpPost]
         [Route("games/{gameId}/selectedCategory")]
-        public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory(long gameId, long categoryId, bool customCategory, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<GameViewModel>>> SelectCategory([FromRoute]long gameId, [FromBody] SelectedCategoryInputModel input, CancellationToken cancellationToken)
         {
+            var categoryId = input.CategoryId.ToLong();
+            var customCategory = input.CustomCategory;
+
             var game = await _dataContext.Games
                 .Include(q => q.Battle)
                 .Include(q => q.GameCategories).ThenInclude(q => q.Category)
@@ -168,7 +172,7 @@ namespace Mergen.Game.Api.API.Battles
                 {
                     category = await _dataContext.Categories.FirstOrDefaultAsync(q => q.Id == categoryId, cancellationToken);
                     if (category == null || category.StatusId != CategoryStatusIds.Enabled || category.IsArchived)
-                        return BadRequest();
+                        return BadRequest("category not found");
 
                     var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q =>
                         q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
@@ -183,11 +187,14 @@ namespace Mergen.Game.Api.API.Battles
                 {
                     category = game.GameCategories.FirstOrDefault(q => q.CategoryId == categoryId)?.Category;
                     if (category == null)
-                        return BadRequest();
+                        return BadRequest("category not found");
                 }
 
                 game.GameState = game.CurrentTurnPlayerId == ((OneToOneBattle)game.Battle).Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
                 game.SelectedCategoryId = categoryId;
+                var battle = (OneToOneBattle)game.Battle;
+                battle.BattleStateId = BattleStateIds.AnsweringQuestions;
+
 
                 // add random questions to battle
                 var questions = await _dataContext.QuestionCategories.Include(q => q.Question).Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
@@ -228,6 +235,8 @@ namespace Mergen.Game.Api.API.Battles
                 accountCoin.Quantity -= _gameSettingsOptions.RandomizeCategoryPrice;
 
                 await _gamingService.RandomizeCategories(game, cancellationToken);
+
+                _dataContext.SaveChanges();
 
                 tran.Complete();
             }
