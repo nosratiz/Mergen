@@ -2,9 +2,10 @@ namespace Mergen.Core.EntityIds
 {
     public enum BattleStateIds
     {
-        SelectCategory = 1,
-        AnsweringQuestions = 2,
-        Completed = 3,
-        Expired = 4
+        WaitingForOpponent = 10,
+        SelectCategory = 20,
+        AnsweringQuestions = 30,
+        Completed = 40,
+        Expired = 50
     }
 }

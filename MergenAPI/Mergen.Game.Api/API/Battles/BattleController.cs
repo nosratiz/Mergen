@@ -75,12 +75,12 @@ namespace Mergen.Game.Api.API.Battles
         [Route("accounts/{accountId}/onetoonebattles")]
         public async Task<ActionResult<ApiResultViewModel<OneToOneBattleViewModel>>> StartRandomBattle([FromRoute] long accountId, [FromBody] OneToOneBattleInputModel inputModel, CancellationToken cancellationToken)
         {
-            var player1 = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == accountId, cancellationToken);
+            var currentPlayer = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == accountId, cancellationToken);
 
-            if (player1 == null)
+            if (currentPlayer == null)
                 return BadRequest("invalid_accountId", "Player1 account not found");
 
-            Account player2 = null;
+            OneToOneBattle battle;
             if (inputModel.BattleInvitationId != null)
             {
                 var battleInvitation = await _dataContext.BattleInvitations.FirstOrDefaultAsync(q => q.Id == inputModel.BattleInvitationId, cancellationToken);
@@ -96,10 +96,13 @@ namespace Mergen.Game.Api.API.Battles
 
                 await _dataContext.SaveChangesAsync(cancellationToken);
 
-                player2 = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == battleInvitation.InviterAccountId, cancellationToken);
+                var inviterPlayer = await _dataContext.Accounts.FirstOrDefaultAsync(q => q.Id == battleInvitation.InviterAccountId, cancellationToken);
+                battle = await _gamingService.StartRandomBattleAsync(inviterPlayer, currentPlayer, cancellationToken);
             }
-
-            var battle = await _gamingService.StartRandomBattleAsync(player1, player2, cancellationToken);
+            else
+            {
+                battle = await _gamingService.StartRandomBattleAsync(currentPlayer, null, cancellationToken);
+            }
 
             return OkData(await _battleMapper.MapAsync(battle, cancellationToken));
         }
@@ -533,7 +536,7 @@ namespace Mergen.Game.Api.API.Battles
                     else
                     {
                         var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
-                        var newGame = await _gamingService.CreateGameAsync(battle, nextPlayer, cancellationToken);
+                        var newGame = await _gamingService.CreateGameAsync(battle, nextPlayer.Id, cancellationToken);
                         battle.LastGame = newGame;
                     }
                 }

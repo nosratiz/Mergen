@@ -24,19 +24,19 @@ namespace Mergen.Core.GameServices
         {
             OneToOneBattle battle;
 
-            var pendingBattle = await _dataContext.OneToOneBattles.OrderBy(q => q.StartDateTime)
+            var pendingBattle = await _dataContext.OneToOneBattles.OrderBy(q => q.CreationDateTime)
                 .Include(q => q.LastGame)
-                .FirstOrDefaultAsync(q => q.Player1Id != player1.Id && q.Player2Id == null, cancellationToken);
+                .FirstOrDefaultAsync(q => q.Player1Id != player1.Id && q.Player2Id == null && q.BattleStateId == BattleStateIds.WaitingForOpponent && q.IsArchived == false, cancellationToken);
 
             if (pendingBattle != null)
             {
                 pendingBattle.Player2Id = player1.Id;
                 battle = pendingBattle;
 
-                if (pendingBattle.LastGame != null && pendingBattle.LastGame.GameState == GameStateIds.Player2AnswerQuestions)
-                {
-                    pendingBattle.LastGame.CurrentTurnPlayerId = player1.Id;
-                }
+                pendingBattle.BattleStateId = BattleStateIds.SelectCategory;
+                pendingBattle.StartDateTime = DateTime.UtcNow;
+
+                await AddStartGameToBattle(battle.Player1Id, cancellationToken, battle);
             }
             else
             {
@@ -56,28 +56,35 @@ namespace Mergen.Core.GameServices
                 Player1Id = player1.Id,
                 Player2Id = player2?.Id,
                 Round = 1,
-                StartDateTime = DateTime.UtcNow,
-                BattleStateId = BattleStateIds.SelectCategory
+                StartDateTime = player2 != null ? DateTime.UtcNow : (DateTime?)null,
+                BattleStateId = player2 != null ? BattleStateIds.SelectCategory : BattleStateIds.WaitingForOpponent,
+                CreationDateTime = DateTime.UtcNow
             };
 
             _dataContext.Battles.Add(battle);
 
-            var startingGame = await CreateGameAsync(battle, player1, cancellationToken);
+            if (player2 != null)
+                await AddStartGameToBattle(player1.Id, cancellationToken, battle);
+
+            return battle;
+        }
+
+        private async Task AddStartGameToBattle(long playerId, CancellationToken cancellationToken, OneToOneBattle battle)
+        {
+            var startingGame = await CreateGameAsync(battle, playerId, cancellationToken);
             battle.Games.Add(startingGame);
             startingGame.Battle = battle;
             await _dataContext.SaveChangesAsync(cancellationToken);
 
             //battle.LastGame = startingGame;
             battle.LastGameId = startingGame.Id;
-
-            return battle;
         }
 
-        public async Task<Game> CreateGameAsync(OneToOneBattle battle, Account player, CancellationToken cancellationToken = default)
+        public async Task<Game> CreateGameAsync(OneToOneBattle battle, long playerId, CancellationToken cancellationToken = default)
         {
             var game = new Game
             {
-                CurrentTurnPlayerId = player?.Id,
+                CurrentTurnPlayerId = playerId,
                 GameState = GameStateIds.SelectCategory,
                 Battle = battle
             };
