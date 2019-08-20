@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Mergen.Api.Core\Mergen.Api.Core.csproj" />
     <ProjectReference Include="..\Mergen.Core\Mergen.Core.csproj" />
   </ItemGroup>
 

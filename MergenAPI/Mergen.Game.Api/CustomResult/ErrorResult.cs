@@ -1,5 +1,5 @@
-using Mergen.Game.Api.ViewModels;
-using Mergen.Game.Api.ViewModels.Errors;
+using Mergen.Api.Core.ViewModels;
+using Mergen.Api.Core.ViewModels.Errors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mergen.Game.Api.CustomResult

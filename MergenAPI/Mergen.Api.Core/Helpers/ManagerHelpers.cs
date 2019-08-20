@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Api.Core.Exceptions;
 using Mergen.Core.Entities.Base;
 using Mergen.Core.Managers.Base;
 
-namespace Mergen.Admin.Api.Helpers
+namespace Mergen.Api.Core.Helpers
 {
     public static class ManagerHelpers
     {

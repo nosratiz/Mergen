@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
-using Mergen.Admin.Api.Helpers;
+using Mergen.Api.Core.Helpers;
 using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 using Mergen.Core.Managers;

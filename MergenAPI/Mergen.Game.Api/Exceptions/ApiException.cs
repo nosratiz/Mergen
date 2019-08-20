@@ -1,5 +1,5 @@
 ﻿using System;
-using Mergen.Game.Api.ViewModels.Errors;
+using Mergen.Api.Core.ViewModels.Errors;
 
 namespace Mergen.Game.Api.Exceptions
 {

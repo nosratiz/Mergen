@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace Mergen.Admin.Api.Middlewares
+namespace Mergen.Api.Core.Middlewares
 {
     public class ExceptionMiddleware
     {

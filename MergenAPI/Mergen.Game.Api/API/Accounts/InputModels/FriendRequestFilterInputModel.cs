@@ -1,6 +1,6 @@
+using Mergen.Api.Core.QueryProcessing;
 using Mergen.Core.Entities;
 using Mergen.Core.QueryProcessing;
-using Mergen.Game.Api.QueryProcessing;
 
 namespace Mergen.Game.Api.API.Accounts.InputModels
 {

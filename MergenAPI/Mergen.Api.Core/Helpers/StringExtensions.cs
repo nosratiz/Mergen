@@ -1,4 +1,4 @@
-namespace Mergen.Game.Api.Helpers
+namespace Mergen.Api.Core.Helpers
 {
     public static class StringExtensions
     {

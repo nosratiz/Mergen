@@ -1,9 +1,9 @@
-﻿using System.Linq;
+using System.Linq;
 using Mergen.Api.Core.ViewModels.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace Mergen.Admin.Api.Helpers
+namespace Mergen.Api.Core.Helpers
 {
     public static class ResultHelpers
     {

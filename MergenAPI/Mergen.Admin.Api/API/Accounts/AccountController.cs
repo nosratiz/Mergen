@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using Mergen.Admin.Api.API.Accounts.InputModels;
 using Mergen.Admin.Api.API.Accounts.ViewModels;
-using Mergen.Admin.Api.Helpers;
+using Mergen.Api.Core.Helpers;
 using Mergen.Api.Core.Security.AuthenticationSystem;
 using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
