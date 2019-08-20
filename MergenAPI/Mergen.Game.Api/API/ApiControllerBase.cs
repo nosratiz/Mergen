@@ -1,9 +1,9 @@
 using Mergen.Api.Core.Security;
-using Mergen.Game.Api.CustomResult;
+using Mergen.Api.Core.CustomResult;
 using Mergen.Api.Core.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using BadRequestResult = Mergen.Game.Api.CustomResult.BadRequestResult;
-using NotFoundResult = Mergen.Game.Api.CustomResult.NotFoundResult;
+using BadRequestResult = Mergen.Api.Core.CustomResult.BadRequestResult;
+using NotFoundResult = Mergen.Api.Core.CustomResult.NotFoundResult;
 
 namespace Mergen.Game.Api.API
 {
