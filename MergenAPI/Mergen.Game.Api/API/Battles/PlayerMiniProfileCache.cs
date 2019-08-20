@@ -1,7 +1,8 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Core.Data;
+using Mergen.Game.Api.API.Battles.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mergen.Game.Api.API.Battles

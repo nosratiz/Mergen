@@ -6,6 +6,8 @@ using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
 using Mergen.Core.Security;
+using Mergen.Game.Api.API.Accounts.InputModels;
+using Mergen.Game.Api.API.Accounts.ViewModels;
 using Mergen.Game.Api.Security.AuthenticationSystem;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Authorization;

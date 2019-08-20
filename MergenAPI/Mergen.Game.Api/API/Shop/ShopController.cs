@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -9,7 +8,8 @@ using Mergen.Core.EntityIds;
 using Mergen.Core.GameServices;
 using Mergen.Core.Managers;
 using Mergen.Core.QueryProcessing;
-using Mergen.Core.Services;
+using Mergen.Game.Api.API.Shop.InputModels;
+using Mergen.Game.Api.API.Shop.ViewModels;
 using Mergen.Game.Api.Helpers;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Authorization;

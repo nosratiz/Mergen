@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +12,8 @@ using Mergen.Core.Options;
 using Mergen.Core.QueryProcessing;
 using Mergen.Core.Security;
 using Mergen.Core.Services;
+using Mergen.Game.Api.API.Accounts.InputModels;
+using Mergen.Game.Api.API.Accounts.ViewModels;
 using Mergen.Game.Api.Helpers;
 using Mergen.Game.Api.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -30,7 +31,7 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly AccountFriendManager _accountFriendManager;
         private readonly FriendRequestManager _friendRequestManager;
         private readonly DataContext _dataContext;
-        private SessionManager _sessionManager;
+        private readonly SessionManager _sessionManager;
 
         public AccountController(AccountManager accountManager, IFileService fileService, StatsManager statsManager, AccountFriendManager accountFriendManager, FriendRequestManager friendRequestManager, DataContext dataContext, SessionManager sessionManager)
         {

@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
-using Mergen.Core.Data;
 using Mergen.Core.Entities;
+using Mergen.Game.Api.API.Battles.ViewModels;
 
 namespace Mergen.Game.Api.API.Battles
 {

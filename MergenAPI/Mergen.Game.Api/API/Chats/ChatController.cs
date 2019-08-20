@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.Managers;
+using Mergen.Game.Api.API.Chats.InputModels;
+using Mergen.Game.Api.API.Chats.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
