@@ -192,8 +192,11 @@ namespace Mergen.Game.Api.API.Accounts
             var fromAccountId = filterInputModel.FilterParameters.FirstOrDefault(q =>
                 q.FieldName == nameof(FriendRequestFilterInputModel.FromAccountId));
 
-            if (fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(),
-                    StringComparison.OrdinalIgnoreCase))
+            var toAccountId = filterInputModel.FilterParameters.FirstOrDefault(q => 
+                q.FieldName == nameof(FriendRequestFilterInputModel.ToAccountId));
+
+            if ((fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(),StringComparison.OrdinalIgnoreCase)) &&
+                 (toAccountId == null || !string.Equals(toAccountId.Values[0], AccountId.ToString(),StringComparison.OrdinalIgnoreCase)))
                 return Forbidden();
 
             var friendRequests = await _friendRequestManager.GetAllAsync(filterInputModel, cancellationToken);

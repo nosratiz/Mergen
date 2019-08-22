@@ -8,6 +8,7 @@ namespace Mergen.Game.Api.API.Accounts.InputModels
     {
         [ValidOperators(Op.Equals)]
         public long FromAccountId { get; set; }
+        [ValidOperators(Op.Equals)]
         public long ToAccountId { get; set; }
         public FriendRequestStatus StatusId { get; set; }
     }
