@@ -255,10 +255,10 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpPost]
         [Route("friendrequests/accepted")]
-        public async Task<IActionResult> AcceptFriendRequest([FromBody] long friendRequestId,
+        public async Task<IActionResult> AcceptFriendRequest([FromBody] AcceptFriendRequestInputModel input,
             CancellationToken cancellationToken)
         {
-            var friendRequest = await _friendRequestManager.GetAsync(friendRequestId, cancellationToken);
+            var friendRequest = await _friendRequestManager.GetAsync(input.FriendRequestId, cancellationToken);
             if (friendRequest == null)
                 return NotFound();
 
