@@ -120,10 +120,17 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/profiles")]
-        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts([FromQuery] string term, [FromQuery]int page = 1, int pageSize = 30,
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts([FromQuery] string term, [FromQuery] string accountIds, [FromQuery]int page = 1, int pageSize = 30,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            var accounts = await _accountManager.SearchAsync(term, page, pageSize, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(term) && !string.IsNullOrWhiteSpace(accountIds))
+                return BadRequest("invalid_input", "cannot use term & accountIds in same query");
+
+            var accountIdsArr = new long[0];
+            if (!string.IsNullOrWhiteSpace(accountIds))
+                accountIdsArr = accountIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(q => long.Parse(q)).ToArray();
+
+            var accounts = await _accountManager.SearchAsync(term, accountIdsArr, page, pageSize, cancellationToken);
             return OkData(ProfileViewModel.Map(accounts));
         }
 
