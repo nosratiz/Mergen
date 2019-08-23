@@ -7,6 +7,8 @@ namespace Mergen.Core.Entities
         public string Title { get; set; }
         public int TypeId { get; set; }
         public int? AvatarCategoryId { get; set; }
+        public int? AvatarTypeId { get; set; }
+        public bool? DefaultAvatar { get; set; }
         public int PriceTypeId { get; set; }
         public decimal Price { get; set; }
         public string ImageFileId { get; set; }

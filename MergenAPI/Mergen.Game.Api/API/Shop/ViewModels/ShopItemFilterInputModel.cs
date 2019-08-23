@@ -8,5 +8,6 @@ namespace Mergen.Game.Api.API.Shop.ViewModels
         public decimal Price { get; set; }
         public string StatusId { get; set; }
         public string AvatarCategoryId { get; set; }
+        public string AvatarTypeId { get; set; }
     }
 }

@@ -13,6 +13,7 @@ namespace Mergen.Admin.Api.API.Accounts.InputModels
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Nickname { get; set; }
+        [Required]
         public string GenderTypeId { get; set; }
         public DateTime? BirthDate { get; set; }
         public string StatusId { get; set; }

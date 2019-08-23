@@ -20,6 +20,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace Mergen.Game.Api.API.Accounts
 {
@@ -32,8 +34,23 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly FriendRequestManager _friendRequestManager;
         private readonly DataContext _dataContext;
         private readonly SessionManager _sessionManager;
+        private readonly AccountItemManager _accountItemManager;
+        private readonly ShopItemManager _shopItemManager;
+        private readonly IImageProcessingService _imageProcessingService;
+        private readonly FileManager _fileManager;
 
-        public AccountController(AccountManager accountManager, IFileService fileService, StatsManager statsManager, AccountFriendManager accountFriendManager, FriendRequestManager friendRequestManager, DataContext dataContext, SessionManager sessionManager)
+        public AccountController(AccountManager accountManager,
+            IFileService fileService,
+            StatsManager statsManager,
+            AccountFriendManager accountFriendManager,
+            FriendRequestManager friendRequestManager,
+            DataContext dataContext,
+            SessionManager sessionManager,
+            AccountItemManager accountItemManager,
+            ShopItemManager shopItemManager,
+            IImageProcessingService imageProcessingService,
+            FileManager fileManager
+            )
         {
             _accountManager = accountManager;
             _fileService = fileService;
@@ -42,6 +59,10 @@ namespace Mergen.Game.Api.API.Accounts
             _friendRequestManager = friendRequestManager;
             _dataContext = dataContext;
             _sessionManager = sessionManager;
+            _accountItemManager = accountItemManager;
+            _shopItemManager = shopItemManager;
+            _imageProcessingService = imageProcessingService;
+            _fileManager = fileManager;
         }
 
         [HttpPost]
@@ -63,6 +84,7 @@ namespace Mergen.Game.Api.API.Accounts
             account.FriendsOnlyBattleInvitations = false;
             account.Nickname = account.Email.Substring(0, account.Email.IndexOf('@'));
             account.RegisterDateTime = DateTime.UtcNow;
+            account.GenderId = GenderIds.Male;
             account = await _accountManager.SaveAsync(account, cancellationToken);
 
             var accountStats = new AccountStatsSummary
@@ -72,7 +94,122 @@ namespace Mergen.Game.Api.API.Accounts
             };
             await _statsManager.SaveAsync(accountStats, cancellationToken);
 
+            await SetDefaultAvatar(account, cancellationToken);
+            await _dataContext.SaveChangesAsync(cancellationToken);
+
             return CreatedData(AccountViewModel.Map(account));
+        }
+
+        private async Task SetDefaultAvatar(Account account, CancellationToken cancellationToken)
+        {
+            var avatarTypeId = account.GenderId == GenderIds.Male ? AvatarTypeIds.Male : AvatarTypeIds.Female;
+            var defaultAvatarItems = await _dataContext.ShopItems.Where(q =>
+                    q.IsArchived == false &&
+                    q.TypeId == ShopItemTypeIds.AvatarItem &&
+                    q.DefaultAvatar == true &&
+                    q.AvatarTypeId == avatarTypeId)
+                    .GroupBy(q => q.AvatarCategoryId).Select(q => q.First())
+                    .OrderBy(q => q.AvatarCategoryId)
+                .ToListAsync(cancellationToken);
+
+            if (defaultAvatarItems.Any())
+            {
+                var imagesToCombine = new List<Stream>();
+                foreach (var item in defaultAvatarItems)
+                {
+                    imagesToCombine.Add(_fileService.GetFile(item.ImageFileId));
+                    _dataContext.AccountItems.Add(new AccountItem
+                    {
+                        AccountId = account.Id,
+                        ShopItemId = item.Id,
+                        ItemTypeId = item.TypeId,
+                        Quantity = 1,
+                    });
+                }
+
+                using (var avatarImg = _imageProcessingService.Combine(imagesToCombine))
+                {
+                    var fileId = await _fileService.SaveFileAsync(avatarImg, cancellationToken);
+                    var file = await _fileManager.SaveAsync(new UploadedFile
+                    {
+                        FileId = fileId,
+                        CreatorAccountId = AccountId,
+                        Extension = "png",
+                        MimeType = "image/png",
+                        MimeTypeCategoryId = UploadedFileMimeTypeCategoryIds.Image,
+                        Name = "avatar",
+                        Size = avatarImg.Length,
+                        TypeId = UploadedFileTypeIds.AccountAvatarImage
+                    }, cancellationToken);
+                    account.AvatarImageId = file.FileId;
+                }
+
+                account.AvatarItemIds = JsonConvert.SerializeObject(defaultAvatarItems.Select(q => q.Id).ToArray());
+                await _accountManager.SaveAsync(account, cancellationToken);
+            }
+        }
+
+        [HttpPut]
+        [Route("accounts/{accountId}/avatar")]
+        public async Task<ActionResult> SetAvatarByAccountId([FromRoute] long accountId, [FromBody] SetAvatarInputModel input, CancellationToken cancellationToken)
+        {
+            if (AccountId != accountId)
+                return Forbidden();
+
+            var account = await _accountManager.GetAsync(accountId, cancellationToken);
+
+            var selectedAvatarItemIds = input.AvatarItemIds;
+            if (selectedAvatarItemIds.Any())
+            {
+                var accountItems = await _accountItemManager.GetByAccountIdAsync(account.Id, cancellationToken);
+                var imagesToCombine = new List<Stream>();
+                foreach (var selectedAvatarItemId in selectedAvatarItemIds)
+                {
+                    var shopItem = await _shopItemManager.GetAsync(selectedAvatarItemId, cancellationToken);
+                    imagesToCombine.Add(_fileService.GetFile(shopItem.ImageFileId));
+
+                    if (!accountItems.Any(q => q.ShopItemId == selectedAvatarItemId))
+                    {
+                        if (shopItem.DefaultAvatar == true)
+                        {
+                            // add item to user's items
+                            var newAccountItem = new AccountItem
+                            {
+                                AccountId = account.Id,
+                                ShopItemId = selectedAvatarItemId,
+                                ItemTypeId = shopItem.TypeId,
+                                Quantity = 1
+                            };
+                            newAccountItem = await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
+                        }
+                        else
+                        {
+                            return BadRequest("invalid_itemId", "AvatarItem not in AccountItems");
+                        }
+                    }
+                }
+
+                using (var avatarImg = _imageProcessingService.Combine(imagesToCombine))
+                {
+                    var fileId = await _fileService.SaveFileAsync(avatarImg, cancellationToken);
+                    var file = await _fileManager.SaveAsync(new UploadedFile
+                    {
+                        FileId = fileId,
+                        CreatorAccountId = AccountId,
+                        Extension = "png",
+                        MimeType = "image/png",
+                        MimeTypeCategoryId = UploadedFileMimeTypeCategoryIds.Image,
+                        Name = "avatar",
+                        Size = avatarImg.Length,
+                        TypeId = UploadedFileTypeIds.AccountAvatarImage
+                    }, cancellationToken);
+                    account.AvatarImageId = file.FileId;
+                }
+            }
+
+            account.AvatarItemIds = JsonConvert.SerializeObject(selectedAvatarItemIds);
+            await _accountManager.SaveAsync(account, cancellationToken);
+            return Ok();
         }
 
         [HttpGet]
@@ -199,11 +336,11 @@ namespace Mergen.Game.Api.API.Accounts
             var fromAccountId = filterInputModel.FilterParameters.FirstOrDefault(q =>
                 q.FieldName == nameof(FriendRequestFilterInputModel.FromAccountId));
 
-            var toAccountId = filterInputModel.FilterParameters.FirstOrDefault(q => 
+            var toAccountId = filterInputModel.FilterParameters.FirstOrDefault(q =>
                 q.FieldName == nameof(FriendRequestFilterInputModel.ToAccountId));
 
-            if ((fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(),StringComparison.OrdinalIgnoreCase)) &&
-                 (toAccountId == null || !string.Equals(toAccountId.Values[0], AccountId.ToString(),StringComparison.OrdinalIgnoreCase)))
+            if ((fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(), StringComparison.OrdinalIgnoreCase)) &&
+                 (toAccountId == null || !string.Equals(toAccountId.Values[0], AccountId.ToString(), StringComparison.OrdinalIgnoreCase)))
                 return Forbidden();
 
             var friendRequests = await _friendRequestManager.GetAllAsync(filterInputModel, cancellationToken);
@@ -348,7 +485,7 @@ namespace Mergen.Game.Api.API.Accounts
             account.Nickname = input.Nickname;
             account.FirstName = input.FirstName;
             account.LastName = input.LastName;
-            account.GenderId = input.GenderId != null && int.TryParse(input.GenderId, out var genderId) ? genderId : (int?)null;
+            account.GenderId = input.GenderId.ToInt();
             account.BirthDate = input.BirthDate;
             account.PhoneNumber = input.PhoneNumber;
             account.Email = input.Email;
@@ -468,7 +605,7 @@ namespace Mergen.Game.Api.API.Accounts
         {
             var accId = accountId.ToLong();
 
-            var result = await (from achievementType in _dataContext.AchievementTypes.Where(q=>q.IsArchived == false)
+            var result = await (from achievementType in _dataContext.AchievementTypes.Where(q => q.IsArchived == false)
                                 join achievement in _dataContext.Achievements.Where(q => q.AccountId == accId) on achievementType.Id equals achievement.AchievementTypeId
                                     into accountAchievement
                                 from a in accountAchievement.DefaultIfEmpty()

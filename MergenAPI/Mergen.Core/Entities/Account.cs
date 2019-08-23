@@ -25,7 +25,7 @@ namespace Mergen.Core.Entities
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Nickname { get; set; }
-        public int? GenderId { get; set; }
+        public int GenderId { get; set; }
         public DateTime? BirthDate { get; set; }
         public int StatusId { get; set; }
         public string StatusNote { get; set; }

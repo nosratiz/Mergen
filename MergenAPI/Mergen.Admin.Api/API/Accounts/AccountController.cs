@@ -81,7 +81,7 @@ namespace Mergen.Admin.Api.API.Accounts
             account.FirstName = inputModel.FirstName;
             account.LastName = inputModel.LastName;
             account.Nickname = inputModel.Nickname;
-            account.GenderId = inputModel.GenderTypeId?.ToInt();
+            account.GenderId = inputModel.GenderTypeId.ToInt();
             account.BirthDate = inputModel.BirthDate;
             account.StatusId = inputModel.StatusId.ToInt();
             account.StatusNote = inputModel.StatusNote;
@@ -131,7 +131,7 @@ namespace Mergen.Admin.Api.API.Accounts
             account.FirstName = inputModel.FirstName;
             account.LastName = inputModel.LastName;
             account.Nickname = inputModel.Nickname;
-            account.GenderId = inputModel.GenderTypeId?.ToInt();
+            account.GenderId = inputModel.GenderTypeId.ToInt();
             account.BirthDate = inputModel.BirthDate;
             account.StatusId = inputModel.StatusId.ToInt();
             account.StatusNote = inputModel.StatusNote;

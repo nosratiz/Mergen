@@ -4,5 +4,6 @@ namespace Mergen.Core.EntityIds
     {
         public const int Coins = 1;
         public const int Cash = 2;
+        public const int Free = 3;
     }
 }

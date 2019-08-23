@@ -6,6 +6,7 @@ namespace Mergen.Game.Api.API.Accounts.InputModels
     public class AccountUpdateInputModel
     {
         public string Nickname { get; set; }
+        [Required]
         public string GenderId { get; set; }
         public DateTime? BirthDate { get; set; }
         public string FirstName { get; set; }

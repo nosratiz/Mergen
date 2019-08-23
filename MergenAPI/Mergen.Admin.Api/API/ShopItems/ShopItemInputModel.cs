@@ -13,5 +13,7 @@ namespace Mergen.Admin.Api.API.ShopItems
         public string StatusId { get; set; }
         public string Description { get; set; }
         public int? Quantity { get; set; }
+        public string AvatarTypeId { get; set; }
+        public bool? DefaultAvatar { get; set; }
     }
 }

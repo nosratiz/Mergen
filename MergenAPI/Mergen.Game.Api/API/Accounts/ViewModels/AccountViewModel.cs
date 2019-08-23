@@ -38,7 +38,7 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             model.FirstName = account.FirstName;
             model.LastName = account.LastName;
             model.NickName = account.Nickname;
-            model.GenderId = account.GenderId?.ToString();
+            model.GenderId = account.GenderId.ToString();
             model.BirthDate = account.BirthDate;
             model.StatusId = account.StatusId.ToString();
             model.StatusNote = account.StatusNote;
