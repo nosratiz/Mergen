@@ -85,7 +85,7 @@ namespace Mergen.Admin.Api
             {
                 options.SwaggerDoc("v1", new Info
                 {
-                    Title = "Mergen API",
+                    Title = "Mergen Admin API",
                     Version = "v1"
                 });
 
@@ -144,7 +144,7 @@ namespace Mergen.Admin.Api
 
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseSwagger();
-            app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Mergen API V1"); });
+            app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Mergen Admin API V1"); });
             app.UseAuthentication();
             app.UseMiddleware<PrincipalWrapperMiddleware>();
             app.UseAuthorization();

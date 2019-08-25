@@ -86,7 +86,7 @@ namespace Mergen.Game.Api
             {
                 options.SwaggerDoc("v1", new Info
                 {
-                    Title = "Mergen API",
+                    Title = "Mergen Game API",
                     Version = "v1"
                 });
 
@@ -147,7 +147,7 @@ namespace Mergen.Game.Api
 
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseSwagger();
-            app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Mergen API V1"); });
+            app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "Mergen Game API V1"); });
             app.UseAuthentication();
             app.UseMiddleware<PrincipalWrapperMiddleware>();
             app.UseAuthorization();
