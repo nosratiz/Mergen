@@ -63,7 +63,8 @@ namespace Mergen.Admin.Api.API.Sessions
                 AccessToken = token,
                 AccountId = account.Id,
                 CreationDateTime = DateTime.UtcNow,
-                StateId = SessionStateIds.Created
+                StateId = SessionStateIds.Created,
+                SourceAppId = AppIds.Admin
             };
 
             await _sessionManager.SaveAsync(session, cancellationToken);

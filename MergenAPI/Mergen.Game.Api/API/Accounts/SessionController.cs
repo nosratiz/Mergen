@@ -52,7 +52,8 @@ namespace Mergen.Game.Api.API.Accounts
                 AccessToken = token,
                 AccountId = account.Id,
                 CreationDateTime = DateTime.UtcNow,
-                StateId = SessionStateIds.Created
+                StateId = SessionStateIds.Created,
+                SourceAppId = AppIds.Game
             };
 
             await _sessionManager.SaveAsync(session, cancellationToken);
