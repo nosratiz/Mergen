@@ -13,6 +13,7 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public long? WinnerPlayerId { get; set; }
         public int Player1CorrectAnswersCount { get; set; }
         public int Player2CorrectAnswersCount { get; set; }
+        public int CurrentTurnPlayerId { get; set; }
 
         public BattleStateIds BattleStateId { get; set; }
     }

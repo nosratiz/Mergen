@@ -67,6 +67,7 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public int CorrectAnswerNumber { get; set; }
         public int? Player1SelectedAnswer { get; set; }
         public int? Player2SelectedAnswer { get; set; }
+        public string CategoryIdsCache { get; set; }
 
         public static QuestionViewModel Map(Question question)
         {

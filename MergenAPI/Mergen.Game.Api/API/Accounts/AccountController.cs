@@ -144,7 +144,12 @@ namespace Mergen.Game.Api.API.Accounts
                     account.AvatarImageId = file.FileId;
                 }
 
-                account.AvatarItemIds = JsonConvert.SerializeObject(defaultAvatarItems.Select(q => q.Id).ToArray());
+                List<Avatar> avatars = new List<Avatar>();
+                foreach (var item in defaultAvatarItems)
+                    avatars.Add(new Avatar { Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value });
+                
+
+                account.AvatarItemIds = JsonConvert.SerializeObject(avatars);
                 await _accountManager.SaveAsync(account, cancellationToken);
             }
         }
@@ -159,34 +164,42 @@ namespace Mergen.Game.Api.API.Accounts
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
 
             var selectedAvatarItemIds = input.AvatarItemIds;
+            List<Avatar> avatars=new List<Avatar>();
             if (selectedAvatarItemIds.Any())
             {
                 var accountItems = await _accountItemManager.GetByAccountIdAsync(account.Id, cancellationToken);
                 var imagesToCombine = new List<Stream>();
+              
                 foreach (var selectedAvatarItemId in selectedAvatarItemIds)
                 {
-                    var shopItem = await _shopItemManager.GetAsync(selectedAvatarItemId, cancellationToken);
-                    imagesToCombine.Add(_fileService.GetFile(shopItem.ImageFileId));
-
-                    if (!accountItems.Any(q => q.ShopItemId == selectedAvatarItemId))
+                    
+                    var shopItem = await _shopItemManager.GetAsync(selectedAvatarItemId.Id, cancellationToken);
+                    if (shopItem!=null)
                     {
-                        if (shopItem.DefaultAvatar == true)
+                        avatars.Add(selectedAvatarItemId);
+                        imagesToCombine.Add(_fileService.GetFile(shopItem.ImageFileId));
+
+                        if (!accountItems.Any(q => q.ShopItemId == selectedAvatarItemId.Id))
                         {
-                            // add item to user's items
-                            var newAccountItem = new AccountItem
+                            if (shopItem.DefaultAvatar == true)
                             {
-                                AccountId = account.Id,
-                                ShopItemId = selectedAvatarItemId,
-                                ItemTypeId = shopItem.TypeId,
-                                Quantity = 1
-                            };
-                            newAccountItem = await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
-                        }
-                        else
-                        {
-                            return BadRequest("invalid_itemId", "AvatarItem not in AccountItems");
+                                // add item to user's items
+                                var newAccountItem = new AccountItem
+                                {
+                                    AccountId = account.Id,
+                                    ShopItemId = selectedAvatarItemId.Id,
+                                    ItemTypeId = shopItem.TypeId,
+                                    Quantity = 1
+                                };
+                                newAccountItem = await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
+                            }
+                            else
+                            {
+                                return BadRequest("invalid_itemId", "AvatarItem not in AccountItems");
+                            }
                         }
                     }
+            
                 }
 
                 using (var avatarImg = _imageProcessingService.Combine(imagesToCombine))
@@ -209,6 +222,7 @@ namespace Mergen.Game.Api.API.Accounts
 
             account.AvatarItemIds = JsonConvert.SerializeObject(selectedAvatarItemIds);
             await _accountManager.SaveAsync(account, cancellationToken);
+
             return Ok();
         }
 

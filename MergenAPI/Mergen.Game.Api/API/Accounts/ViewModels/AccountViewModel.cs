@@ -23,7 +23,7 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
         public bool IsPhoneNumberVerified { get; set; }
         public string Timezone { get; set; }
         public DateTime RegisterDateTime { get; set; }
-        public IEnumerable<string> AvatarItemIds { get; set; }
+        public IEnumerable<Avatar> AvatarItemIds { get; set; }
         public IEnumerable<string> RoleIds { get; set; }
         public bool ReceiveNotifications { get; set; }
         public bool SearchableByEmailAddressOrUsername { get; set; }
@@ -48,7 +48,7 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             model.AvatarImageId = account.AvatarImageId;
             model.Timezone = account.Timezone;
             model.RegisterDateTime = account.RegisterDateTime;
-            model.AvatarItemIds = account.AvatarItemIds != null ? JsonConvert.DeserializeObject<long[]>(account.AvatarItemIds).Select(q => q.ToString()) : new string[0];
+            model.AvatarItemIds = account.AvatarItemIds != null ? JsonConvert.DeserializeObject<List<Avatar>>(account.AvatarItemIds) : new List<Avatar>();
             model.RoleIds = account.RoleIds != null ? JsonConvert.DeserializeObject<long[]>(account.RoleIds).Select(q => q.ToString()) : new string[0];
             model.ReceiveNotifications = account.ReceiveNotifications;
             model.SearchableByEmailAddressOrUsername = account.SearchableByEmailAddressOrUsername;

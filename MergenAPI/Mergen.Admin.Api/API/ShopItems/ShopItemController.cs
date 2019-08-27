@@ -25,6 +25,7 @@ namespace Mergen.Admin.Api.API.ShopItems
         public async Task<ActionResult<ApiResultViewModel<ShopItemViewModel>>> Create([FromBody]ShopItemInputModel inputModel,
             CancellationToken cancellationToken)
         {
+
             var shopItem = new ShopItem
             {
                 Title = inputModel.Title,

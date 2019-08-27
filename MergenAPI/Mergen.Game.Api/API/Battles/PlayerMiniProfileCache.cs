@@ -23,7 +23,7 @@ namespace Mergen.Game.Api.API.Battles
             {
                 var account = await _context.Accounts.FirstOrDefaultAsync(q => q.Id == playerId, cancellationToken);
                 var stats = await _context.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == playerId, cancellationToken);
-                miniProfile = new PlayerMiniProfileViewModel(account.Nickname, stats?.Level ?? 0);
+                miniProfile = new PlayerMiniProfileViewModel(account.Nickname, stats?.Level ?? 0,account.AvatarImageId);
                 Profiles.TryAdd(playerId, miniProfile);
             }
 
