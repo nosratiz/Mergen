@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Mergen.Core.EntityIds;
 
 namespace Mergen.Game.Api.API.Battles.ViewModels
@@ -13,7 +14,9 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public long? WinnerPlayerId { get; set; }
         public int Player1CorrectAnswersCount { get; set; }
         public int Player2CorrectAnswersCount { get; set; }
-        public int CurrentTurnPlayerId { get; set; }
+        public long? CurrentTurnPlayerId { get; set; }
+
+        public List<GameViewModel> Game { get; set; }
 
         public BattleStateIds BattleStateId { get; set; }
     }

@@ -58,7 +58,7 @@ namespace Mergen.Core.GameServices
                 Round = 1,
                 StartDateTime = player2 != null ? DateTime.UtcNow : (DateTime?)null,
                 BattleStateId = player2 != null ? BattleStateIds.SelectCategory : BattleStateIds.WaitingForOpponent,
-                CreationDateTime = DateTime.UtcNow
+                CreationDateTime = DateTime.UtcNow,
             };
 
             _dataContext.Battles.Add(battle);

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -19,6 +20,11 @@ namespace Mergen.Game.Api.API.Battles
         public async ValueTask<OneToOneBattleViewModel> MapAsync(OneToOneBattle battle, CancellationToken cancellationToken)
         {
             var vm = Mapper.Map<OneToOneBattleViewModel>(battle);
+
+            vm.CurrentTurnPlayerId = battle.Games.LastOrDefault(x => x.BattleId == battle.Id)?.CurrentTurnPlayerId;
+
+            if (battle.Games !=null)
+                vm.Game = Mapper.Map<List<GameViewModel>>(battle.Games);
 
             vm.Player1MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);
 

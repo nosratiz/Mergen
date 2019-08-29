@@ -29,7 +29,7 @@ namespace Mergen.Core.Entities
 
         public BattleStateIds BattleStateId { get; set; }
 
-        public int CurrentTurnPlayerId { get; set; }
+       
     }
 
     public class AccountCorrectAnswerSummary

@@ -55,7 +55,7 @@ namespace Mergen.Game.Api.API.Battles
         {
             var activeBattles = await _dataContext.OneToOneBattles.AsNoTracking()
                 .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired)
-                .ToListAsync(cancellationToken);
+                .Include(x => x.Games).ToListAsync(cancellationToken);
 
             return OkData(await _battleMapper.MapAllAsync(activeBattles, cancellationToken));
         }
@@ -112,7 +112,7 @@ namespace Mergen.Game.Api.API.Battles
         [Route("battles/{battleId}")]
         public async Task<ActionResult<ApiResultViewModel<OneToOneBattleViewModel>>> GetBattleById(long battleId, CancellationToken cancellationToken)
         {
-            var battle = await _dataContext.OneToOneBattles.FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
+            var battle = await _dataContext.OneToOneBattles.Include(x => x.Games).FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
             return OkData(await _battleMapper.MapAsync(battle, cancellationToken));
         }
 
@@ -124,6 +124,7 @@ namespace Mergen.Game.Api.API.Battles
             var battle = await _dataContext.OneToOneBattles
                 .Include(q => q.Games).ThenInclude(q => q.GameCategories).ThenInclude(q => q.Category)
                 .Include(q => q.Games).ThenInclude(q => q.GameQuestions).ThenInclude(q => q.Question)
+                .Include(x => x.Games)
                 .FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
 
             if (battle == null)
@@ -446,14 +447,10 @@ namespace Mergen.Game.Api.API.Battles
                         int player2CorrectAnswersCount = 0;
                         foreach (var battleGame in battle.Games)
                         {
-                            if (battleGame.CurrentTurnPlayerId == battle.Player1Id)
-                            {
-                                player1CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player1SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
-                            }
-                            else
-                            {
-                                player2CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
-                            }
+                            player1CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player1SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
+
+                            player2CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
+
                         }
 
                         battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
@@ -625,9 +622,10 @@ namespace Mergen.Game.Api.API.Battles
 
             int sky;
 
-            var averageAnswersCountIn70PercentOfBattles = Math.Round(
+            double? averageAnswersCountIn70PercentOfBattles = Math.Round(
                 battleCorrectAnswersCount.OrderByDescending(q => q.CorrectAnswersCount).Take((int)(totalBattlesCount * 0.7f))
-                    .Average(q => q.CorrectAnswersCount), 0);
+                    .Average(q => (double?)q.CorrectAnswersCount) ?? 0, 0);
+
             if (averageAnswersCountIn70PercentOfBattles >= 14)
                 sky = 7;
             else if (averageAnswersCountIn70PercentOfBattles >= 13)

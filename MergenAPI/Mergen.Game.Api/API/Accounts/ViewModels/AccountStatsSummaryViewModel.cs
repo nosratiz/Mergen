@@ -28,11 +28,16 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
         public int UnlockedAchievements { get; set; }
         public IEnumerable<AccountCategoryStatViewModel> Top5CategoryStats { get; set; }
 
-        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, IEnumerable<AccountCategoryStat> categoryStats)
+        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, List<AccountCategoryStat> categoryStats)
         {
             var model = AutoMapper.Mapper.Map<AccountStatsSummaryViewModel>(stats);
             model.Top5CategoryStats = categoryStats.Select(AccountCategoryStatViewModel.Map);
             return model;
+        }
+
+        internal static AccountStatsSummaryViewModel Map(AccountStatsSummary accountStats, object p)
+        {
+            throw new NotImplementedException();
         }
     }
 }

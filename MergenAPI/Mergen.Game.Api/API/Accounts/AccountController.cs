@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.IO;
+using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
 
 namespace Mergen.Game.Api.API.Accounts
@@ -265,8 +266,11 @@ namespace Mergen.Game.Api.API.Accounts
                     AccountId = accountId
                 });
 
-            var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking().Include(q => q.Category).Where(q => q.AccountId == accountId).ToListAsync(cancellationToken);
-            return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStats));
+            var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking()
+                .Include(q => q.Category).Where(q => q.AccountId == accountId)
+                .ToListAsync(cancellationToken);
+
+            return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStats.ToList()));
         }
 
         [HttpGet]
