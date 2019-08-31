@@ -267,10 +267,13 @@ namespace Mergen.Game.Api.API.Accounts
                 });
 
             var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking()
-                .Include(q => q.Category).Where(q => q.AccountId == accountId)
+                .Include(q => q.Category).Where(q => q.AccountId == accountId).GroupBy(x=>new{x.CategoryId,x.Category}).Take(5)
                 .ToListAsync(cancellationToken);
 
-            return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStats.ToList()));
+            var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel {CategoryId = x.Key.CategoryId,CategoryTitle = x.Key.Category.Title,CorrectAnswersCount = x.Sum(a=>a.CorrectAnswersCount),TotalQuestionsCount = x.Sum(a=>a.TotalQuestionsCount)});
+
+
+            return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStatViewModels.ToList()));
         }
 
         [HttpGet]

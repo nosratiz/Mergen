@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mergen.Core.Entities;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace Mergen.Game.Api.API.Accounts.ViewModels
 {
@@ -28,6 +29,7 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
         public int UnlockedAchievements { get; set; }
         public IEnumerable<AccountCategoryStatViewModel> Top5CategoryStats { get; set; }
 
+
         public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, List<AccountCategoryStat> categoryStats)
         {
             var model = AutoMapper.Mapper.Map<AccountStatsSummaryViewModel>(stats);
@@ -35,9 +37,11 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             return model;
         }
 
-        internal static AccountStatsSummaryViewModel Map(AccountStatsSummary accountStats, object p)
+        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, List<AccountCategoryStatViewModel> categoryStats)
         {
-            throw new NotImplementedException();
+            var model = AutoMapper.Mapper.Map<AccountStatsSummaryViewModel>(stats);
+            model.Top5CategoryStats = categoryStats;
+            return model;
         }
     }
 }
