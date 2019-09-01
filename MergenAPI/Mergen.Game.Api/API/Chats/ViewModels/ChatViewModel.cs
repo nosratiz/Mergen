@@ -25,7 +25,8 @@ namespace Mergen.Game.Api.API.Chats.ViewModels
                 SenderAccountId = chat.SenderAccountId.ToString(),
                 ReceiverAccountId = chat.ReceiverAccountId.ToString(),
                 DateTime = chat.DateTime,
-                MessageText = chat.MessageText
+                MessageText = chat.MessageText,
+                
             };
         }
     }

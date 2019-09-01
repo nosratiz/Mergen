@@ -17,7 +17,7 @@ namespace Mergen.Core.Managers
         public AccountFriendManager(DbContextFactory dbContextFactory, QueryProcessor queryProcessor) : base(dbContextFactory, queryProcessor)
         {
         }
-
+        
 
         public async Task<IEnumerable<(Account account, AccountStatsSummary stats)>> GetFriendsAsync(long accountId, CancellationToken cancellationToken)
         {

@@ -170,6 +170,7 @@ namespace Mergen.Game.Api.API.Accounts
             {
                 var accountItems = await _accountItemManager.GetByAccountIdAsync(account.Id, cancellationToken);
                 var imagesToCombine = new List<Stream>();
+                var headCompbine=new List<Stream>();
               
                 foreach (var selectedAvatarItemId in selectedAvatarItemIds)
                 {
@@ -178,6 +179,7 @@ namespace Mergen.Game.Api.API.Accounts
                     if (shopItem!=null)
                     {
                         avatars.Add(selectedAvatarItemId);
+
                         imagesToCombine.Add(_fileService.GetFile(shopItem.ImageFileId));
 
                         if (!accountItems.Any(q => q.ShopItemId == selectedAvatarItemId.Id))
