@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,8 +24,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.IO;
+using LazZiya.ImageResize;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
+using FileOptions = Mergen.Core.Options.FileOptions;
 
 namespace Mergen.Game.Api.API.Accounts
 {
@@ -39,6 +44,7 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly ShopItemManager _shopItemManager;
         private readonly IImageProcessingService _imageProcessingService;
         private readonly FileManager _fileManager;
+        private readonly FileOptions _options;
 
         public AccountController(AccountManager accountManager,
             IFileService fileService,
@@ -50,7 +56,8 @@ namespace Mergen.Game.Api.API.Accounts
             AccountItemManager accountItemManager,
             ShopItemManager shopItemManager,
             IImageProcessingService imageProcessingService,
-            FileManager fileManager
+            FileManager fileManager,
+            IOptions<FileOptions> options
             )
         {
             _accountManager = accountManager;
@@ -64,6 +71,7 @@ namespace Mergen.Game.Api.API.Accounts
             _shopItemManager = shopItemManager;
             _imageProcessingService = imageProcessingService;
             _fileManager = fileManager;
+            _options = options.Value;
         }
 
         [HttpPost]
@@ -148,7 +156,7 @@ namespace Mergen.Game.Api.API.Accounts
                 List<Avatar> avatars = new List<Avatar>();
                 foreach (var item in defaultAvatarItems)
                     avatars.Add(new Avatar { Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value });
-                
+
 
                 account.AvatarItemIds = JsonConvert.SerializeObject(avatars);
                 await _accountManager.SaveAsync(account, cancellationToken);
@@ -165,18 +173,17 @@ namespace Mergen.Game.Api.API.Accounts
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
 
             var selectedAvatarItemIds = input.AvatarItemIds;
-            List<Avatar> avatars=new List<Avatar>();
+            List<Avatar> avatars = new List<Avatar>();
             if (selectedAvatarItemIds.Any())
             {
                 var accountItems = await _accountItemManager.GetByAccountIdAsync(account.Id, cancellationToken);
                 var imagesToCombine = new List<Stream>();
-                var headCompbine=new List<Stream>();
-              
+
                 foreach (var selectedAvatarItemId in selectedAvatarItemIds)
                 {
-                    
+
                     var shopItem = await _shopItemManager.GetAsync(selectedAvatarItemId.Id, cancellationToken);
-                    if (shopItem!=null)
+                    if (shopItem != null)
                     {
                         avatars.Add(selectedAvatarItemId);
 
@@ -202,7 +209,7 @@ namespace Mergen.Game.Api.API.Accounts
                             }
                         }
                     }
-            
+
                 }
 
                 using (var avatarImg = _imageProcessingService.Combine(imagesToCombine))
@@ -219,6 +226,15 @@ namespace Mergen.Game.Api.API.Accounts
                         Size = avatarImg.Length,
                         TypeId = UploadedFileTypeIds.AccountAvatarImage
                     }, cancellationToken);
+
+                    var uploadedImage = Image.FromStream(avatarImg);
+
+                    var img =ImageResize.Crop(uploadedImage, 300, 250, TargetSpot.TopMiddle);
+
+                    var filePath = Path.Combine(_options.BaseStoragePath, $"{fileId}-h.png");
+
+                    img.SaveAs($"{filePath}");
+
                     account.AvatarImageId = file.FileId;
                 }
             }
@@ -231,13 +247,18 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/{accountId}/avatar")]
-        public async Task<ActionResult> GetAvatarByAccountId([FromRoute] long accountId,
+        public async Task<ActionResult> GetAvatarByAccountId([FromRoute] long accountId, [FromQuery]bool head,
             CancellationToken cancellationToken)
         {
+
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
 
             if (account.AvatarImageId == null)
                 return NotFound("no_avatar");
+
+            if (head)
+                return File(_fileService.GetFile($"{account.AvatarImageId}-h.png"), "image/png");
+            
 
             return File(_fileService.GetFile(account.AvatarImageId.ToString()), "image/png");
         }
@@ -269,10 +290,10 @@ namespace Mergen.Game.Api.API.Accounts
                 });
 
             var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking()
-                .Include(q => q.Category).Where(q => q.AccountId == accountId).GroupBy(x=>new{x.CategoryId,x.Category}).Take(5)
+                .Include(q => q.Category).Where(q => q.AccountId == accountId).GroupBy(x => new { x.CategoryId, x.Category }).Take(5)
                 .ToListAsync(cancellationToken);
 
-            var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel {CategoryId = x.Key.CategoryId,CategoryTitle = x.Key.Category.Title,CorrectAnswersCount = x.Sum(a=>a.CorrectAnswersCount),TotalQuestionsCount = x.Sum(a=>a.TotalQuestionsCount)});
+            var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel { CategoryId = x.Key.CategoryId, CategoryTitle = x.Key.Category.Title, CorrectAnswersCount = x.Sum(a => a.CorrectAnswersCount), TotalQuestionsCount = x.Sum(a => a.TotalQuestionsCount) });
 
 
             return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStatViewModels.ToList()));
