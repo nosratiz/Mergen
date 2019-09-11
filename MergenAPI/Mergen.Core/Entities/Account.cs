@@ -46,6 +46,7 @@ namespace Mergen.Core.Entities
         public bool SearchableByEmailAddressOrUsername { get; set; }
         public bool FriendsOnlyBattleInvitations { get; set; }
         public DateTime RegisterDateTime { get; set; }
+        public bool IsBot { get; set; }
 
         // Cache Items
         public string AvatarItemIds { get; set; }
