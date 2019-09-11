@@ -11,6 +11,7 @@ using Mergen.Api.Core.Security.AuthorizationSystem;
 using Mergen.Api.Core.TimezoneHelpers;
 using Mergen.Core;
 using Mergen.Game.Api.API.Battles;
+using Mergen.Game.Api.Jobs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -22,6 +23,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Quartz;
+using Quartz.Impl;
+using Quartz.Spi;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace Mergen.Game.Api
@@ -42,6 +46,20 @@ namespace Mergen.Game.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.RegisterMergenServices(Configuration, _hostingEnvironment.IsDevelopment());
+
+            #region Quartz
+
+            services.AddSingleton<IJobFactory, SingletonJobFactory>();
+            services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
+
+            //services.AddSingleton<RemoveCartJob>();
+            //services.AddSingleton(new JobSchedule(jobType: typeof(RemoveCartJob), cronExpression:
+            //    "0/5 * * * * ?"
+            //));
+
+            services.AddHostedService<QuartzHostedService>();
+
+            #endregion
 
             services.AddLocalization();
             services.AddJwtAuthentication(Configuration);
