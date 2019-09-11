@@ -77,6 +77,7 @@ namespace Mergen.Core
             services.AddSingleton<FriendRequestManager>();
             services.AddSingleton<LevelManager>();
             services.AddSingleton<AchievementTypeManager>();
+            services.AddSingleton<BattleManager>();
 
             services.AddScoped<GamingService>();
             services.AddScoped<AchievementService>();
@@ -93,6 +94,7 @@ namespace Mergen.Core
             services.Configure<FileOptions>(configuration.GetSection("File"));
             services.Configure<BaseUrlsOptions>(configuration.GetSection("BaseUrls"));
             services.Configure<GameSettings>(configuration.GetSection("GameSettings"));
+            services.Configure<ConnectionStringOption>(configuration.GetSection("ConnectionStrings"));
         }
 
         private static void RegisterQueryProcessing(this IServiceCollection services)

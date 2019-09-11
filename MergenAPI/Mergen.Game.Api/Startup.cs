@@ -52,10 +52,12 @@ namespace Mergen.Game.Api
             services.AddSingleton<IJobFactory, SingletonJobFactory>();
             services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 
-            //services.AddSingleton<RemoveCartJob>();
-            //services.AddSingleton(new JobSchedule(jobType: typeof(RemoveCartJob), cronExpression:
-            //    "0/5 * * * * ?"
-            //));
+            services.AddSingleton<FindPlayer>();
+            services.AddSingleton<PlayGame>();
+            services.AddSingleton(new JobSchedule(typeof(PlayGame), "0/5 * * * * ?"));
+            services.AddSingleton(new JobSchedule(typeof(FindPlayer), "0 0/3 0 ? * * *"
+            
+            ));
 
             services.AddHostedService<QuartzHostedService>();
 
@@ -150,7 +152,7 @@ namespace Mergen.Game.Api
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCors("AllowCors"); 
+            app.UseCors("AllowCors");
             app.UseRequestLocalization(options =>
             {
                 options.AddSupportedCultures("en");

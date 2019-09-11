@@ -90,7 +90,8 @@ namespace Mergen.Game.Api.API.Battles
 
                 battleInvitation.Status = BattleInvitationStatus.Accepted;
 
-                var inviterPlayerStats = await _dataContext.AccountStatsSummaries.FirstAsync(q => q.IsArchived == false && q.AccountId == battleInvitation.InviterAccountId, cancellationToken);
+                var inviterPlayerStats = await _dataContext.AccountStatsSummaries.FirstAsync(q => q.IsArchived == false &&
+                                                                                                  q.AccountId == battleInvitation.InviterAccountId, cancellationToken);
                 inviterPlayerStats.SuccessfulBattleInvitationsCount += 1;
 
                 await _achievementService.ProcessSuccessfulBattleInvitationAchievements(battleInvitation, inviterPlayerStats, cancellationToken);

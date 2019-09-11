@@ -14,7 +14,5 @@ namespace Mergen.Game.Api.Jobs
             CronExpression = cronExpression;
         }
         
-
-
     }
 }
