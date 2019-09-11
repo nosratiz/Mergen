@@ -8,6 +8,7 @@ namespace Mergen.Core.Services
     {
         Task<string> SaveFileAsync(Stream file, CancellationToken cancellationToken);
         Stream GetFile(string id);
+        Stream GetHeadFile(string id);
         void DeleteFile(string id);
         long GetFileSize(string id);
     }

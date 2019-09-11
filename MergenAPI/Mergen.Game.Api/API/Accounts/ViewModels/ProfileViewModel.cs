@@ -9,6 +9,8 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
         public string AccountId { get; set; }
         public string Name { get; set; }
         public int? Level { get; set; }
+        public string AvatarImageId { get; set; }
+        public int Rank { get; set; }
 
         public static ProfileViewModel Map(Account account, AccountStatsSummary stats)
         {
@@ -16,7 +18,9 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             {
                 AccountId = account.Id.ToString(),
                 Name = account.Nickname,
-                Level = stats?.Level
+                Level = stats?.Level,
+                AvatarImageId = account.AvatarImageId,
+                Rank = stats?.Rank ?? 0
             };
         }
 

@@ -74,5 +74,6 @@ namespace Mergen.Core.Services
                 finalImage?.Dispose();
             }
         }
+
     }
 }

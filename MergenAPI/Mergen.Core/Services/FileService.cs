@@ -1,9 +1,14 @@
 using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using FileOptions = Mergen.Core.Options.FileOptions;
+
 
 namespace Mergen.Core.Services
 {
@@ -21,15 +26,22 @@ namespace Mergen.Core.Services
         {
             var fileName = Guid.NewGuid().ToString("N");
             var filePath = Path.Combine(_options.BaseStoragePath, fileName);
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream, 81920, cancellationToken);
-            }
 
+            using (var stream = new FileStream(filePath, FileMode.Create))
+                await file.CopyToAsync(stream, 81920, cancellationToken);
+             
+      
+          
             return fileName;
         }
 
         public Stream GetFile(string id)
+        {
+            var filePath = Path.Combine(_options.BaseStoragePath, id);
+            return File.OpenRead(filePath);
+        }
+
+        public Stream GetHeadFile(string id)
         {
             var filePath = Path.Combine(_options.BaseStoragePath, id);
             return File.OpenRead(filePath);

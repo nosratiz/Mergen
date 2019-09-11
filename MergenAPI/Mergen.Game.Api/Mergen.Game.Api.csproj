@@ -13,6 +13,8 @@
     </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="API\Message\InputModels\" />
+    <Folder Include="API\Message\ViewModels\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
 
@@ -31,10 +33,12 @@
 
   <ItemGroup>
     <PackageReference Include="automapper" Version="8.0.0" />
+    <PackageReference Include="LazZiya.ImageResize" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="nodatime" Version="2.4.2" />
     <PackageReference Include="Quartz" Version="3.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="3.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
   </ItemGroup>
 
   <ItemGroup>
