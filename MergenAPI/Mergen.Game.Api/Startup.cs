@@ -54,10 +54,13 @@ namespace Mergen.Game.Api
 
             services.AddSingleton<FindPlayer>();
             services.AddSingleton<PlayGame>();
-            services.AddSingleton(new JobSchedule(typeof(PlayGame), "0/5 * * * * ?"));
-            services.AddSingleton(new JobSchedule(typeof(FindPlayer), "0 0/3 0 ? * * *"
-            
-            ));
+            services.AddSingleton<BotAnswerQuestion>();
+
+            services.AddSingleton(new JobSchedule(typeof(BotAnswerQuestion), "0/5 * * * * ?"));
+            //services.AddSingleton(new JobSchedule(typeof(PlayGame), "0/5 * * * * ?"));
+            //services.AddSingleton(new JobSchedule(typeof(FindPlayer), "0 0/3 0 ? * * *"
+
+            //));
 
             services.AddHostedService<QuartzHostedService>();
 

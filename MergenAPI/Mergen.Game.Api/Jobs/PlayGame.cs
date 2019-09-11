@@ -50,7 +50,8 @@ namespace Mergen.Game.Api.Jobs
 
 
                     // add random questions to battle
-                    var questions = await dataContext.QuestionCategories.Include(q => q.Question).Where(q => q.CategoryId == gameCategories[categoryId].CategoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync();
+                    var questions = await dataContext.QuestionCategories.Include(q => q.Question)
+                        .Where(q => q.CategoryId == gameCategories[categoryId].CategoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync();
                     var gameQuestions = questions.Select(q => new GameQuestion
                     {
                         GameId = game.Id,
