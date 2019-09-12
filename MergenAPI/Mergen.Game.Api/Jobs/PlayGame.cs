@@ -27,8 +27,8 @@ namespace Mergen.Game.Api.Jobs
 
             using (DataContext dataContext = new DataContext(option.Options))
             {
-                var games = await dataContext.Games.Include(x=>x.Battle)
-                    .Where(x => x.SelectedCategoryId == null && x.IsArchived == false)
+                var games = await dataContext.Games.Include(x => x.Battle)
+                    .Where(x => (x.SelectedCategoryId == null) && x.IsArchived == false)
                     .ToListAsync();
 
                 foreach (var game in games)
@@ -39,19 +39,19 @@ namespace Mergen.Game.Api.Jobs
                         continue;
 
                     var gameCategories = await dataContext.GameCategories.Where(x => x.GameId == game.Id).ToListAsync();
-                    var categoryId = new Random().Next(gameCategories.Count);
+                    var categoryId = new Random().Next(1,3);
 
 
 
                     game.GameState = GameStateIds.Player2AnswerQuestions;
-                    game.SelectedCategoryId = gameCategories[categoryId].CategoryId;
+                    game.SelectedCategoryId = categoryId;
                     var battle = (OneToOneBattle)game.Battle;
                     battle.BattleStateId = BattleStateIds.AnsweringQuestions;
 
 
                     // add random questions to battle
                     var questions = await dataContext.QuestionCategories.Include(q => q.Question)
-                        .Where(q => q.CategoryId == gameCategories[categoryId].CategoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync();
+                        .Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync();
                     var gameQuestions = questions.Select(q => new GameQuestion
                     {
                         GameId = game.Id,
@@ -60,9 +60,9 @@ namespace Mergen.Game.Api.Jobs
                     });
                     game.GameQuestions = gameQuestions.ToList();
 
+                    //dataContext.GameQuestions.AddRange(gameQuestions);
+
                     await dataContext.SaveChangesAsync();
-
-
                 }
             }
         }

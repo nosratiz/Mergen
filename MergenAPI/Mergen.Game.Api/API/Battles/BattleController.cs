@@ -439,7 +439,7 @@ namespace Mergen.Game.Api.API.Battles
                         .Include(q => q.Player2)
                         .FirstOrDefaultAsync(q => q.Id == gameBattleId, cancellationToken);
 
-                    if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
+                    if (battle.Games.Count ==6 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
                     {
                         // Battle Completed
 

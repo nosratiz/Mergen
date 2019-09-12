@@ -24,8 +24,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.IO;
+using System.Security.Claims;
 using LazZiya.ImageResize;
+using Mergen.Api.Core.Security.AuthenticationSystem;
 using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
 using FileOptions = Mergen.Core.Options.FileOptions;
 
@@ -45,6 +48,7 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly IImageProcessingService _imageProcessingService;
         private readonly FileManager _fileManager;
         private readonly FileOptions _options;
+        private readonly JwtTokenGenerator _tokenGenerator;
 
         public AccountController(AccountManager accountManager,
             IFileService fileService,
@@ -57,8 +61,7 @@ namespace Mergen.Game.Api.API.Accounts
             ShopItemManager shopItemManager,
             IImageProcessingService imageProcessingService,
             FileManager fileManager,
-            IOptions<FileOptions> options
-            )
+            IOptions<FileOptions> options, JwtTokenGenerator tokenGenerator)
         {
             _accountManager = accountManager;
             _fileService = fileService;
@@ -71,6 +74,7 @@ namespace Mergen.Game.Api.API.Accounts
             _shopItemManager = shopItemManager;
             _imageProcessingService = imageProcessingService;
             _fileManager = fileManager;
+            _tokenGenerator = tokenGenerator;
             _options = options.Value;
         }
 
@@ -103,10 +107,28 @@ namespace Mergen.Game.Api.API.Accounts
             };
             await _statsManager.SaveAsync(accountStats, cancellationToken);
 
+
+
             await SetDefaultAvatar(account, cancellationToken);
             await _dataContext.SaveChangesAsync(cancellationToken);
 
-            return CreatedData(AccountViewModel.Map(account));
+            var token = _tokenGenerator.GenerateToken(TimeSpan.FromDays(365),
+                new Claim(JwtRegisteredClaimNames.Jti, account.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, account.Email),
+                new Claim("Timezone", account.Timezone));
+
+            var session = new Session
+            {
+                AccessToken = token,
+                AccountId = account.Id,
+                CreationDateTime = DateTime.UtcNow,
+                StateId = SessionStateIds.Created,
+                SourceAppId = AppIds.Game
+            };
+
+            await _sessionManager.SaveAsync(session, cancellationToken);
+
+            return CreatedData(RegisterViewModel.GetRegisterViewModel(AccountViewModel.Map(account), SessionViewModel.Map(session)));
         }
 
         private async Task SetDefaultAvatar(Account account, CancellationToken cancellationToken)
@@ -151,7 +173,15 @@ namespace Mergen.Game.Api.API.Accounts
                         TypeId = UploadedFileTypeIds.AccountAvatarImage
                     }, cancellationToken);
                     account.AvatarImageId = file.FileId;
+                    var uploadedImage = Image.FromStream(avatarImg);
+
+                    var img = ImageResize.Crop(uploadedImage, 300, 250, TargetSpot.TopMiddle);
+
+                    var filePath = Path.Combine(_options.BaseStoragePath, $"{fileId}-h.png");
+
+                    img.SaveAs($"{filePath}");
                 }
+
 
                 List<Avatar> avatars = new List<Avatar>();
                 foreach (var item in defaultAvatarItems)
@@ -229,7 +259,7 @@ namespace Mergen.Game.Api.API.Accounts
 
                     var uploadedImage = Image.FromStream(avatarImg);
 
-                    var img =ImageResize.Crop(uploadedImage, 300, 250, TargetSpot.TopMiddle);
+                    var img = ImageResize.Crop(uploadedImage, 300, 250, TargetSpot.TopMiddle);
 
                     var filePath = Path.Combine(_options.BaseStoragePath, $"{fileId}-h.png");
 
@@ -258,7 +288,7 @@ namespace Mergen.Game.Api.API.Accounts
 
             if (head)
                 return File(_fileService.GetFile($"{account.AvatarImageId}-h.png"), "image/png");
-            
+
 
             return File(_fileService.GetFile(account.AvatarImageId.ToString()), "image/png");
         }

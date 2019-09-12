@@ -64,6 +64,9 @@ namespace Mergen.Game.Api.Jobs
                     var gameQuestions = await dataContext.GameQuestions.Include(x => x.Question)
                         .ThenInclude(x => x.QuestionCategories).Where(x => x.GameId == game.Id).ToListAsync();
 
+                    if (gameQuestions.Count == 0)
+                        continue;
+
                     var changedCategoryStats = new List<AccountCategoryStat>();
 
                     foreach (var gameQuestion in gameQuestions)
@@ -145,7 +148,7 @@ namespace Mergen.Game.Api.Jobs
                             .Include(q => q.Player2)
                             .FirstOrDefaultAsync(q => q.Id == gameBattleId);
 
-                        if (battle.Games.Count == 5 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
+                        if (battle.Games.Count == 6 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
                         {
                             // Battle Completed
 
@@ -268,7 +271,7 @@ namespace Mergen.Game.Api.Jobs
                         }
                         else
                         {
-                             var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
+                            var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
                             var newGame = new Core.Entities.Game
                             {
                                 CurrentTurnPlayerId = nextPlayer.Id,

@@ -61,5 +61,7 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
         {
             return accounts.Select(Map);
         }
+
+
     }
 }
