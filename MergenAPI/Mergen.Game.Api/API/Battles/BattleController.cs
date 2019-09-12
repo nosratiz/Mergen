@@ -534,7 +534,7 @@ namespace Mergen.Game.Api.API.Battles
                     }
                     else
                     {
-                        var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
+                        var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player1 : battle.Player2;
                         var newGame = await _gamingService.CreateGameAsync(battle, nextPlayer.Id, cancellationToken);
                         battle.LastGame = newGame;
                     }

@@ -271,7 +271,7 @@ namespace Mergen.Game.Api.Jobs
                         }
                         else
                         {
-                            var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
+                            var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player1 : battle.Player2;
                             var newGame = new Core.Entities.Game
                             {
                                 CurrentTurnPlayerId = nextPlayer.Id,
@@ -280,20 +280,20 @@ namespace Mergen.Game.Api.Jobs
                             };
 
                             var randomCategoryIds = new HashSet<long>();
-                            while (game.GameCategories.Count < 3)
+                            while (newGame.GameCategories.Count < 3)
                             {
                                 var randomCategory = await dataContext.Categories.Where(q => q.IsArchived == false).OrderBy(q => Guid.NewGuid()).FirstOrDefaultAsync();
                                 if (randomCategory != null && randomCategoryIds.Add(randomCategory.Id))
                                 {
-                                    game.GameCategories.Add(new GameCategory
+                                    newGame.GameCategories.Add(new GameCategory
                                     {
                                         CategoryId = randomCategory.Id
                                     });
                                 }
                             }
 
-                            battle.Games.Add(game);
-                            dataContext.Games.Add(game);
+                            battle.Games.Add(newGame);
+                            dataContext.Games.Add(newGame);
                             battle.LastGame = newGame;
                         }
                     }
