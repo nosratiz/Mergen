@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
 using Mergen.Api.Core.Helpers;
 using Mergen.Api.Core.Middlewares;
 using Mergen.Api.Core.QueryProcessing;
@@ -27,6 +23,10 @@ using Quartz;
 using Quartz.Impl;
 using Quartz.Spi;
 using Swashbuckle.AspNetCore.Swagger;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
 
 namespace Mergen.Game.Api
 {
@@ -64,7 +64,7 @@ namespace Mergen.Game.Api
 
             services.AddHostedService<QuartzHostedService>();
 
-            #endregion
+            #endregion Quartz
 
             services.AddLocalization();
             services.AddJwtAuthentication(Configuration);

@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -8,6 +5,9 @@ using Mergen.Core.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Quartz;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.Jobs
 {
@@ -39,15 +39,12 @@ namespace Mergen.Game.Api.Jobs
                         continue;
 
                     var gameCategories = await dataContext.GameCategories.Where(x => x.GameId == game.Id).ToListAsync();
-                    var categoryId = new Random().Next(1,3);
-
-
+                    var categoryId = new Random().Next(1, 3);
 
                     game.GameState = GameStateIds.Player2AnswerQuestions;
                     game.SelectedCategoryId = categoryId;
                     var battle = (OneToOneBattle)game.Battle;
                     battle.BattleStateId = BattleStateIds.AnsweringQuestions;
-
 
                     // add random questions to battle
                     var questions = await dataContext.QuestionCategories.Include(q => q.Question)

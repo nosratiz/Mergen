@@ -1,7 +1,7 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using Quartz.Spi;
+using System;
 
 namespace Mergen.Game.Api.Jobs
 {
@@ -16,13 +16,11 @@ namespace Mergen.Game.Api.Jobs
 
         public IJob NewJob(TriggerFiredBundle bundle, IScheduler scheduler)
         {
-           return _serviceProvider.GetRequiredService(bundle.JobDetail.JobType) as IJob;
-            
+            return _serviceProvider.GetRequiredService(bundle.JobDetail.JobType) as IJob;
         }
 
         public void ReturnJob(IJob job)
         {
-         
         }
     }
 }

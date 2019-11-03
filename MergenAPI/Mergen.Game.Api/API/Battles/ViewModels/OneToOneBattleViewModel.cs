@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Mergen.Core.EntityIds;
+using System.Collections.Generic;
 
 namespace Mergen.Game.Api.API.Battles.ViewModels
 {

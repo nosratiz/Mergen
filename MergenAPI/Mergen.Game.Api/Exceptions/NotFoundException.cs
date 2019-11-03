@@ -1,5 +1,3 @@
-using System;
-
 namespace Mergen.Game.Api.Exceptions
 {
     public class NotFoundException : ApiException

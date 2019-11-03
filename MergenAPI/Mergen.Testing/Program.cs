@@ -28,6 +28,7 @@ namespace Mergen.Testing
 
                 var db = sp.GetRequiredService<DataContext>();
                 var gamingService = new GamingService(db);
+                
             }
             catch (Exception e)
             {

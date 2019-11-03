@@ -1,18 +1,18 @@
-using System;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
 using Mergen.Api.Core.Security.AuthenticationSystem;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
 using Mergen.Core.Managers;
 using Mergen.Core.Security;
 using Mergen.Game.Api.API.Accounts.InputModels;
 using Mergen.Game.Api.API.Accounts.ViewModels;
-using Mergen.Api.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
+using System;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.API.Accounts
 {
@@ -40,7 +40,7 @@ namespace Mergen.Game.Api.API.Accounts
                 return BadRequest("invalid_email", "Account not found");
 
             if (!PasswordHash.ValidatePassword(inputModel.Password, account.PasswordHash))
-                return BadRequest("invalid_username_or_password", "Invalid Nickname or Password!");
+                return BadRequest("invalid_username_or_password", "Invalid Email or Password!");
 
             var token = _tokenGenerator.GenerateToken(TimeSpan.FromDays(365),
                 new Claim(JwtRegisteredClaimNames.Jti, account.Id.ToString()),

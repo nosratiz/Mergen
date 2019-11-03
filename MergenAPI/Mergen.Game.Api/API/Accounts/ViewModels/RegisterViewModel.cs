@@ -13,7 +13,6 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             {
                 AccountViewModel = accountViewModel,
                 SessionViewModel = sessionViewModel
-
             };
         }
     }

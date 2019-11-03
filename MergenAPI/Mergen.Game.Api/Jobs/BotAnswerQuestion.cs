@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -11,6 +6,10 @@ using Mergen.Core.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Quartz;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.Jobs
 {
@@ -60,7 +59,6 @@ namespace Mergen.Game.Api.Jobs
                         dataContext.AccountStatsSummaries.Add(playerStat);
                     }
 
-
                     var gameQuestions = await dataContext.GameQuestions.Include(x => x.Question)
                         .ThenInclude(x => x.QuestionCategories).Where(x => x.GameId == game.Id).ToListAsync();
 
@@ -82,12 +80,15 @@ namespace Mergen.Game.Api.Jobs
                             case 1:
                                 gameQuestion.Question.Answer1ChooseHistory++;
                                 break;
+
                             case 2:
                                 gameQuestion.Question.Answer2ChooseHistory++;
                                 break;
+
                             case 3:
                                 gameQuestion.Question.Answer3ChooseHistory++;
                                 break;
+
                             case 4:
                                 gameQuestion.Question.Answer4ChooseHistory++;
                                 break;
@@ -111,8 +112,6 @@ namespace Mergen.Game.Api.Jobs
                             playerCategoryStat.TotalQuestionsCount += 1;
                             playerCategoryStat.CorrectAnswersCount += score;
                         }
-
-
                     }
 
                     var achievementTypess = await dataContext.AchievementTypes.AsNoTracking().Where(q => q.IsArchived == false).ToListAsync();
@@ -160,7 +159,6 @@ namespace Mergen.Game.Api.Jobs
                                 player1CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player1SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
 
                                 player2CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
-
                             }
 
                             battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
@@ -196,7 +194,6 @@ namespace Mergen.Game.Api.Jobs
                                 // Experience for lose
                                 player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
                                 player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
-
                             }
                             else if (battle.WinnerPlayerId == battle.Player2Id)
                             {
@@ -262,7 +259,6 @@ namespace Mergen.Game.Api.Jobs
 
                             await dataContext.SaveChangesAsync();
 
-
                             await dataContext.SaveChangesAsync();
 
                             // Calculate Sky
@@ -311,7 +307,6 @@ namespace Mergen.Game.Api.Jobs
                     await dataContext.SaveChangesAsync();
                 }
             }
-
         }
 
         private async Task<int> CalculatePlayerSkyAsync(long accountId)
@@ -356,7 +351,6 @@ namespace Mergen.Game.Api.Jobs
                 return sky;
             }
         }
-
 
         private void ProcessWinnerAchievement(long playerId, AccountStatsSummary playerStats,
             Dictionary<long, Achievement> playerAchievements, AchievementType a)
@@ -416,6 +410,5 @@ namespace Mergen.Game.Api.Jobs
                 }
             }
         }
-
     }
 }

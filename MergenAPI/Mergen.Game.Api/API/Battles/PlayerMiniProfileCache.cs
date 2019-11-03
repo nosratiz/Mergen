@@ -1,9 +1,9 @@
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Game.Api.API.Battles.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -23,7 +23,7 @@ namespace Mergen.Game.Api.API.Battles
             {
                 var account = await _context.Accounts.FirstOrDefaultAsync(q => q.Id == playerId, cancellationToken);
                 var stats = await _context.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == playerId, cancellationToken);
-                miniProfile = new PlayerMiniProfileViewModel(account.Nickname, stats?.Level ?? 0,account.AvatarImageId);
+                miniProfile = new PlayerMiniProfileViewModel(account.Nickname, stats?.Level ?? 0, account.AvatarImageId);
                 Profiles.TryAdd(playerId, miniProfile);
             }
 

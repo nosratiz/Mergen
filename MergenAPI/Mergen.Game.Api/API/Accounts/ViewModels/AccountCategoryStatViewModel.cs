@@ -15,6 +15,5 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             model.CategoryTitle = categoryStat.Category?.Title;
             return model;
         }
-
     }
 }

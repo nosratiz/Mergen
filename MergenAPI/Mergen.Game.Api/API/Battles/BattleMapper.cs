@@ -1,10 +1,10 @@
+using AutoMapper;
+using Mergen.Core.Entities;
+using Mergen.Game.Api.API.Battles.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
-using Mergen.Core.Entities;
-using Mergen.Game.Api.API.Battles.ViewModels;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -23,7 +23,7 @@ namespace Mergen.Game.Api.API.Battles
 
             vm.CurrentTurnPlayerId = battle.Games.LastOrDefault(x => x.BattleId == battle.Id)?.CurrentTurnPlayerId;
 
-            if (battle.Games !=null)
+            if (battle.Games != null)
                 vm.Game = Mapper.Map<List<GameViewModel>>(battle.Games);
 
             vm.Player1MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);

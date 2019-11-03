@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Transactions;
+using LazZiya.ImageResize;
 using Mergen.Api.Core.Helpers;
+using Mergen.Api.Core.Security.AuthenticationSystem;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -18,18 +12,21 @@ using Mergen.Core.Security;
 using Mergen.Core.Services;
 using Mergen.Game.Api.API.Accounts.InputModels;
 using Mergen.Game.Api.API.Accounts.ViewModels;
-using Mergen.Api.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.IO;
-using System.Security.Claims;
-using LazZiya.ImageResize;
-using Mergen.Api.Core.Security.AuthenticationSystem;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Transactions;
 using FileOptions = Mergen.Core.Options.FileOptions;
 
 namespace Mergen.Game.Api.API.Accounts
@@ -107,8 +104,6 @@ namespace Mergen.Game.Api.API.Accounts
             };
             await _statsManager.SaveAsync(accountStats, cancellationToken);
 
-
-
             await SetDefaultAvatar(account, cancellationToken);
             await _dataContext.SaveChangesAsync(cancellationToken);
 
@@ -182,11 +177,9 @@ namespace Mergen.Game.Api.API.Accounts
                     img.SaveAs($"{filePath}");
                 }
 
-
                 List<Avatar> avatars = new List<Avatar>();
                 foreach (var item in defaultAvatarItems)
                     avatars.Add(new Avatar { Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value });
-
 
                 account.AvatarItemIds = JsonConvert.SerializeObject(avatars);
                 await _accountManager.SaveAsync(account, cancellationToken);
@@ -211,7 +204,6 @@ namespace Mergen.Game.Api.API.Accounts
 
                 foreach (var selectedAvatarItemId in selectedAvatarItemIds)
                 {
-
                     var shopItem = await _shopItemManager.GetAsync(selectedAvatarItemId.Id, cancellationToken);
                     if (shopItem != null)
                     {
@@ -231,7 +223,7 @@ namespace Mergen.Game.Api.API.Accounts
                                     ItemTypeId = shopItem.TypeId,
                                     Quantity = 1
                                 };
-                                newAccountItem = await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
+                                await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
                             }
                             else
                             {
@@ -239,7 +231,6 @@ namespace Mergen.Game.Api.API.Accounts
                             }
                         }
                     }
-
                 }
 
                 using (var avatarImg = _imageProcessingService.Combine(imagesToCombine))
@@ -280,7 +271,6 @@ namespace Mergen.Game.Api.API.Accounts
         public async Task<ActionResult> GetAvatarByAccountId([FromRoute] long accountId, [FromQuery]bool head,
             CancellationToken cancellationToken)
         {
-
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
 
             if (account.AvatarImageId == null)
@@ -288,7 +278,6 @@ namespace Mergen.Game.Api.API.Accounts
 
             if (head)
                 return File(_fileService.GetFile($"{account.AvatarImageId}-h.png"), "image/png");
-
 
             return File(_fileService.GetFile(account.AvatarImageId.ToString()), "image/png");
         }
@@ -325,14 +314,13 @@ namespace Mergen.Game.Api.API.Accounts
 
             var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel { CategoryId = x.Key.CategoryId, CategoryTitle = x.Key.Category.Title, CorrectAnswersCount = x.Sum(a => a.CorrectAnswersCount), TotalQuestionsCount = x.Sum(a => a.TotalQuestionsCount) });
 
-
             return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStatViewModels.ToList()));
         }
 
         [HttpGet]
         [Route("accounts/profiles")]
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts([FromQuery] string term, [FromQuery] string accountIds, [FromQuery]int page = 1, int pageSize = 30,
-            CancellationToken cancellationToken = default(CancellationToken))
+            CancellationToken cancellationToken = default)
         {
             if (!string.IsNullOrWhiteSpace(term) && !string.IsNullOrWhiteSpace(accountIds))
                 return BadRequest("invalid_input", "cannot use term & accountIds in same query");
@@ -572,7 +560,6 @@ namespace Mergen.Game.Api.API.Accounts
             return OkData(AccountViewModel.Map(account));
         }
 
-
         [HttpGet]
         [Route("accounts/resetpasswordrequests/{token}")]
         [AllowAnonymous]
@@ -584,8 +571,7 @@ namespace Mergen.Game.Api.API.Accounts
             if (existingAccount == null)
                 return BadRequest("invalid_code", "Link is not valid.");
 
-            if (existingAccount.ResetPasswordTokenGenerationTime?.Add(options.Value.ExpiresAfter) <
-                DateTime.UtcNow)
+            if (existingAccount.ResetPasswordTokenGenerationTime?.Add(options.Value.ExpiresAfter) < DateTime.UtcNow)
                 return BadRequest("expired_code", "Link is expired.");
 
             return OkData(new ResetPasswordRequestViewModel

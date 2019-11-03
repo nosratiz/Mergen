@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -10,23 +6,23 @@ using Mergen.Core.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Quartz;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.Jobs
 {
     public class FindPlayer : IJob
     {
-
         private readonly BattleManager _battleManager;
         private readonly ConnectionStringOption _connectionStringOption;
 
-
         public FindPlayer(BattleManager battleManager, IOptions<ConnectionStringOption> connectionStringOption)
         {
-
             _battleManager = battleManager;
             _connectionStringOption = connectionStringOption.Value;
         }
-
 
         public async Task Execute(IJobExecutionContext context)
         {
@@ -75,12 +71,8 @@ namespace Mergen.Game.Api.Jobs
                     game.Battle = battle;
                     battle.LastGameId = game.Id;
                     await dataContext.SaveChangesAsync();
-
-                   
                 }
             }
-
         }
-
     }
 }

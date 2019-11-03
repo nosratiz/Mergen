@@ -1,15 +1,14 @@
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Quartz;
 using Quartz.Spi;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.Jobs
 {
-    public class QuartzHostedService:IHostedService
+    public class QuartzHostedService : IHostedService
     {
-
         private readonly ISchedulerFactory _schedulerFactory;
         private readonly IJobFactory _jobFactory;
         private readonly IEnumerable<JobSchedule> _jobSchedules;
@@ -23,6 +22,7 @@ namespace Mergen.Game.Api.Jobs
             _jobSchedules = jobSchedules;
             _jobFactory = jobFactory;
         }
+
         public IScheduler Scheduler { get; set; }
 
         public async Task StartAsync(CancellationToken cancellationToken)

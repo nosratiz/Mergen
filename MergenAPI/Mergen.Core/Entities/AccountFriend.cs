@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Mergen.Core.Entities.Base;
 
 namespace Mergen.Core.Entities

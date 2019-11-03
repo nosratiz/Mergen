@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Transactions;
 using Mergen.Api.Core.Helpers;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -14,10 +8,16 @@ using Mergen.Core.Managers;
 using Mergen.Core.Options;
 using Mergen.Game.Api.API.Battles.InputModels;
 using Mergen.Game.Api.API.Battles.ViewModels;
-using Mergen.Api.Core.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -201,7 +201,6 @@ namespace Mergen.Game.Api.API.Battles
                 var battle = (OneToOneBattle)game.Battle;
                 battle.BattleStateId = BattleStateIds.AnsweringQuestions;
 
-
                 // add random questions to battle
                 var questions = await _dataContext.QuestionCategories.Include(q => q.Question).Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
                 var gameQuestions = questions.Select(q => new GameQuestion
@@ -249,7 +248,6 @@ namespace Mergen.Game.Api.API.Battles
 
             return Ok();
         }
-
 
         [HttpGet]
         [Route("activecategories")]
@@ -330,12 +328,15 @@ namespace Mergen.Game.Api.API.Battles
                         case 1:
                             gq.Question.Answer1ChooseHistory++;
                             break;
+
                         case 2:
                             gq.Question.Answer2ChooseHistory++;
                             break;
+
                         case 3:
                             gq.Question.Answer3ChooseHistory++;
                             break;
+
                         case 4:
                             gq.Question.Answer4ChooseHistory++;
                             break;
@@ -439,7 +440,7 @@ namespace Mergen.Game.Api.API.Battles
                         .Include(q => q.Player2)
                         .FirstOrDefaultAsync(q => q.Id == gameBattleId, cancellationToken);
 
-                    if (battle.Games.Count ==6 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
+                    if (battle.Games.Count == 6 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
                     {
                         // Battle Completed
 
@@ -451,7 +452,6 @@ namespace Mergen.Game.Api.API.Battles
                             player1CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player1SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
 
                             player2CorrectAnswersCount += battleGame.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0);
-
                         }
 
                         battle.Player1CorrectAnswersCount = player1CorrectAnswersCount;
@@ -487,7 +487,6 @@ namespace Mergen.Game.Api.API.Battles
                             // Experience for lose
                             player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
                             player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
-
                         }
                         else if (battle.WinnerPlayerId == battle.Player2Id)
                         {
@@ -524,7 +523,6 @@ namespace Mergen.Game.Api.API.Battles
 
                         await _achievementService.ProcessBattleAchievementsAsync(battle, player1Stats, player2Stats,
                             cancellationToken);
-
 
                         await _dataContext.SaveChangesAsync(cancellationToken);
 

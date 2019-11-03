@@ -1,8 +1,5 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Transactions;
 using Mergen.Api.Core.Helpers;
+using Mergen.Api.Core.ViewModels;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
@@ -11,10 +8,13 @@ using Mergen.Core.Managers;
 using Mergen.Core.QueryProcessing;
 using Mergen.Game.Api.API.Shop.InputModels;
 using Mergen.Game.Api.API.Shop.ViewModels;
-using Mergen.Api.Core.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Transactions;
 
 namespace Mergen.Game.Api.API.Shop
 {

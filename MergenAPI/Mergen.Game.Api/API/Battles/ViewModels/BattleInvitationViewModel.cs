@@ -1,7 +1,7 @@
+using Mergen.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mergen.Core.Entities;
 
 namespace Mergen.Game.Api.API.Battles.ViewModels
 {

@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Mergen.Core.Data;
 using Mergen.Core.Entities;
 using Mergen.Core.Managers;
@@ -10,6 +5,11 @@ using Mergen.Game.Api.API.Chats.InputModels;
 using Mergen.Game.Api.API.Chats.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Mergen.Game.Api.API.Chats
 {

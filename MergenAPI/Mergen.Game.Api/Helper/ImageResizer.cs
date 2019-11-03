@@ -6,7 +6,6 @@ namespace Mergen.Game.Api.Helper
     {
         public static Image CropImage(Image sourceImage, int sourceX, int sourceY, int sourceWidth, int sourceHeight, int destinationWidth, int destinationHeight)
         {
-            
             Image destinationImage = new Bitmap(destinationWidth, destinationHeight);
             Graphics g = Graphics.FromImage(destinationImage);
 
@@ -16,7 +15,6 @@ namespace Mergen.Game.Api.Helper
                 new Rectangle(sourceX, sourceY, sourceWidth, sourceHeight),
                 GraphicsUnit.Pixel
             );
-            
 
             return destinationImage;
         }

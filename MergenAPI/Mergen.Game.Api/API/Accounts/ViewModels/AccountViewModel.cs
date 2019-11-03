@@ -1,8 +1,8 @@
+using Mergen.Core.Entities;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mergen.Core.Entities;
-using Newtonsoft.Json;
 
 namespace Mergen.Game.Api.API.Accounts.ViewModels
 {
@@ -56,12 +56,9 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
             return model;
         }
 
-
         public static IEnumerable<AccountViewModel> MapAll(IEnumerable<Account> accounts)
         {
             return accounts.Select(Map);
         }
-
-
     }
 }

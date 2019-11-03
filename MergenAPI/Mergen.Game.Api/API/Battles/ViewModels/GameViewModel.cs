@@ -1,8 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
 using AutoMapper;
 using Mergen.Core.Entities;
 using Mergen.Core.EntityIds;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Mergen.Game.Api.API.Battles.ViewModels
 {
@@ -25,7 +25,7 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
                 var model = QuestionViewModel.Map(q.Question);
                 model.Player1SelectedAnswer = q.Player1SelectedAnswer;
                 model.Player2SelectedAnswer = q.Player2SelectedAnswer;
-                
+
                 return model;
             }).ToList();
             return vm;
@@ -76,7 +76,7 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public bool DoubleChance { get; set; } = false;
         public double Answer1Percentage { get; set; }
         public double Answer2Percentage { get; set; }
-        public double Answer3Percentage { get; set; }   
+        public double Answer3Percentage { get; set; }
         public double Answer4Percentage { get; set; }
 
         public static QuestionViewModel Map(Question question)

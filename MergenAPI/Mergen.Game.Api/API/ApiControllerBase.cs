@@ -1,5 +1,5 @@
-using Mergen.Api.Core.Security;
 using Mergen.Api.Core.CustomResult;
+using Mergen.Api.Core.Security;
 using Mergen.Api.Core.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using BadRequestResult = Mergen.Api.Core.CustomResult.BadRequestResult;
