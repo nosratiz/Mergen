@@ -78,6 +78,7 @@ namespace Mergen.Core
             services.AddSingleton<LevelManager>();
             services.AddSingleton<AchievementTypeManager>();
             services.AddSingleton<BattleManager>();
+            services.AddSingleton<NotificationManager>();
 
             services.AddScoped<GamingService>();
             services.AddScoped<AchievementService>();

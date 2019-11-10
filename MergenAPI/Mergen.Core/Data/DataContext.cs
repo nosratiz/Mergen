@@ -47,5 +47,7 @@ namespace Mergen.Core.Data
         public DbSet<BattleInvitation> BattleInvitations { get; set; }
         public DbSet<Chat> Chats { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
     }
 }

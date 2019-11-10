@@ -47,6 +47,7 @@ namespace Mergen.Game.Api.API.Accounts
         private readonly FileManager _fileManager;
         private readonly FileOptions _options;
         private readonly JwtTokenGenerator _tokenGenerator;
+        private readonly NotificationManager _notificationManager;
 
         public AccountController(AccountManager accountManager,
             IFileService fileService,
@@ -59,7 +60,7 @@ namespace Mergen.Game.Api.API.Accounts
             ShopItemManager shopItemManager,
             IImageProcessingService imageProcessingService,
             FileManager fileManager,
-            IOptions<FileOptions> options, JwtTokenGenerator tokenGenerator)
+            IOptions<FileOptions> options, JwtTokenGenerator tokenGenerator, NotificationManager notificationManager)
         {
             _accountManager = accountManager;
             _fileService = fileService;
@@ -73,6 +74,7 @@ namespace Mergen.Game.Api.API.Accounts
             _imageProcessingService = imageProcessingService;
             _fileManager = fileManager;
             _tokenGenerator = tokenGenerator;
+            _notificationManager = notificationManager;
             _options = options.Value;
         }
 
@@ -182,7 +184,7 @@ namespace Mergen.Game.Api.API.Accounts
 
                 List<Avatar> avatars = new List<Avatar>();
                 foreach (var item in defaultAvatarItems)
-                    avatars.Add(new Avatar {Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value});
+                    avatars.Add(new Avatar { Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value });
 
                 account.AvatarItemIds = JsonConvert.SerializeObject(avatars);
                 await _accountManager.SaveAsync(account, cancellationToken);
@@ -307,20 +309,24 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var accountStats = await _statsManager.GetByAccountIdAsync(accountId, cancellationToken);
+
             if (accountStats == null)
                 return OkData(new AccountStatsSummaryViewModel
                 {
                     AccountId = accountId
                 });
 
+            accountStats.Rank = await _statsManager.GetRank(accountStats.Score);
+
             var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking()
                 .Include(q => q.Category).Where(q => q.AccountId == accountId)
-                .GroupBy(x => new {x.CategoryId, x.Category}).Take(5)
+                .GroupBy(x => new { x.CategoryId, x.Category }).Take(5)
                 .ToListAsync(cancellationToken);
 
             var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel
             {
-                CategoryId = x.Key.CategoryId, CategoryTitle = x.Key.Category.Title,
+                CategoryId = x.Key.CategoryId,
+                CategoryTitle = x.Key.Category.Title,
                 CorrectAnswersCount = x.Sum(a => a.CorrectAnswersCount),
                 TotalQuestionsCount = x.Sum(a => a.TotalQuestionsCount)
             });
@@ -402,7 +408,17 @@ namespace Mergen.Game.Api.API.Accounts
                 StatusId = FriendRequestStatus.Pending
             };
 
+            var account = await _accountManager.GetAsync(accountId, cancellationToken);
             friendRequest = await _friendRequestManager.SaveAsync(friendRequest, cancellationToken);
+
+            await _notificationManager.SaveAsync(
+                new Core.Entities.Notification
+                {
+                    AccountId = friendRequest.ToAccountId,
+                    Body = $"friend request sent by {account.Email}",
+                    NotificationTypeId = NotificationTypeIds.General,
+                    Title = "Friend Request"
+                }, cancellationToken);
 
             return CreatedData(friendRequest);
         }
@@ -425,7 +441,10 @@ namespace Mergen.Game.Api.API.Accounts
                      StringComparison.OrdinalIgnoreCase)))
                 return Forbidden();
 
+
             var friendRequests = await _friendRequestManager.GetAllAsync(filterInputModel, cancellationToken);
+
+
 
             return OkData(friendRequests.Data, friendRequests.TotalCount);
         }
@@ -695,15 +714,15 @@ namespace Mergen.Game.Api.API.Accounts
             var accId = accountId.ToLong();
 
             var result = await (from achievementType in _dataContext.AchievementTypes.Where(q => q.IsArchived == false)
-                join achievement in _dataContext.Achievements.Where(q => q.AccountId == accId) on achievementType.Id
-                    equals achievement.AchievementTypeId
-                    into accountAchievement
-                from a in accountAchievement.DefaultIfEmpty()
-                select new AchievementViewModel
-                {
-                    AchievementType = AchievementTypeViewModel.Map(achievementType),
-                    IsAchieved = a != null
-                }).ToListAsync(cancellationToken);
+                                join achievement in _dataContext.Achievements.Where(q => q.AccountId == accId) on achievementType.Id
+                                    equals achievement.AchievementTypeId
+                                    into accountAchievement
+                                from a in accountAchievement.DefaultIfEmpty()
+                                select new AchievementViewModel
+                                {
+                                    AchievementType = AchievementTypeViewModel.Map(achievementType),
+                                    IsAchieved = a != null
+                                }).ToListAsync(cancellationToken);
 
             return OkData(result);
         }
@@ -726,7 +745,7 @@ namespace Mergen.Game.Api.API.Accounts
 
             foreach (var item in payments)
                 shopItems.Add(item.ShopItem);
-            
+
 
             return Ok(ShopItemViewModel.MapAll(shopItems));
         }

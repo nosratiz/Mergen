@@ -29,6 +29,8 @@ namespace Mergen.Game.Api.API.Battles
         private readonly LevelManager _levelManager;
         private readonly AchievementService _achievementService;
         private readonly GameSettings _gameSettingsOptions;
+        private readonly NotificationManager _notificationManager;
+        private readonly AccountManager _accountManager;
 
         private const int ExperienceBase = 10;
         private const int WinExperienceMultiplier = 3;
@@ -39,13 +41,15 @@ namespace Mergen.Game.Api.API.Battles
         private const int WinCoinMultiplier = 2;
         private const int LoseCoinMultiplier = 1;
 
-        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager, AchievementService achievementService)
+        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager, AchievementService achievementService, NotificationManager notificationManager, AccountManager accountManager)
         {
             _dataContext = dataContext;
             _gamingService = gamingService;
             _battleMapper = battleMapper;
             _levelManager = levelManager;
             _achievementService = achievementService;
+            _notificationManager = notificationManager;
+            _accountManager = accountManager;
             _gameSettingsOptions = gameSettingsOptions.Value;
         }
 
@@ -101,8 +105,17 @@ namespace Mergen.Game.Api.API.Battles
                 var inviterPlayerStats = await _dataContext.AccountStatsSummaries.FirstAsync(q => q.IsArchived == false &&
                                                                                                   q.AccountId == battleInvitation.InviterAccountId, cancellationToken);
                 inviterPlayerStats.SuccessfulBattleInvitationsCount += 1;
-
+                var account = await _accountManager.GetAsync(accountId, cancellationToken);
                 await _achievementService.ProcessSuccessfulBattleInvitationAchievements(battleInvitation, inviterPlayerStats, cancellationToken);
+
+                await _notificationManager.SaveAsync(
+                    new Core.Entities.Notification
+                    {
+                        AccountId = accountId,
+                        Body = $"Accept Battle By  {account.Email}",
+                        NotificationTypeId = NotificationTypeIds.General,
+                        Title = "Accept battle"
+                    }, cancellationToken);
 
                 await _dataContext.SaveChangesAsync(cancellationToken);
 
@@ -449,6 +462,7 @@ namespace Mergen.Game.Api.API.Battles
                         .Include(q => q.Player2)
                         .FirstOrDefaultAsync(q => q.Id == gameBattleId, cancellationToken);
 
+
                     if (battle.Games.Count == 6 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
                     {
                         // Battle Completed
@@ -545,6 +559,7 @@ namespace Mergen.Game.Api.API.Battles
                         battle.LastGame = newGame;
                     }
                 }
+               
                 else
                 {
                     var battle = await _dataContext.OneToOneBattles
@@ -555,6 +570,15 @@ namespace Mergen.Game.Api.API.Battles
                     var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player2 : battle.Player1;
                     game.CurrentTurnPlayerId = nextPlayer?.Id;
                     game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
+
+                    //await _notificationManager.SaveAsync(
+                    //    new Core.Entities.Notification
+                    //    {
+                    //        AccountId = nextPlayer.Id,
+                    //        Body = $"",
+                    //        NotificationTypeId = NotificationTypeIds.GameTurn,
+                    //        Title = "your Turn"
+                    //    }, cancellationToken);
                 }
 
                 await _dataContext.SaveChangesAsync(cancellationToken);
