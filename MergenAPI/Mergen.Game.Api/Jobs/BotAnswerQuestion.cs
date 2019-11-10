@@ -49,6 +49,7 @@ namespace Mergen.Game.Api.Jobs
                         continue;
 
                     var playerStat = await dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId);
+                 
                     if (playerStat == null)
                     {
                         playerStat = new AccountStatsSummary
@@ -195,6 +196,7 @@ namespace Mergen.Game.Api.Jobs
                                 player2Stats.Score += player2CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
                                 player2Stats.Coins += player2CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
                             }
+                          
                             else if (battle.WinnerPlayerId == battle.Player2Id)
                             {
                                 player1Stats.LoseCount += 1;
@@ -211,6 +213,7 @@ namespace Mergen.Game.Api.Jobs
                                 player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * LoseExperienceMultiplier;
                                 player1Stats.Coins += player1CorrectAnswersCount + CoinBase * LoseCoinMultiplier;
                             }
+                          
                             else
                             {
                                 // Exprience for draw (drop)
@@ -265,6 +268,7 @@ namespace Mergen.Game.Api.Jobs
                             player1Stats.Sky = await CalculatePlayerSkyAsync(battle.Player1Id);
                             player2Stats.Sky = await CalculatePlayerSkyAsync(battle.Player2Id.Value);
                         }
+                     
                         else
                         {
                             var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player1 : battle.Player2;

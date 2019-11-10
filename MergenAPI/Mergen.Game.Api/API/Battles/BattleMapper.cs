@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Mergen.Core.EntityIds;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -22,6 +23,21 @@ namespace Mergen.Game.Api.API.Battles
             var vm = Mapper.Map<OneToOneBattleViewModel>(battle);
 
             vm.CurrentTurnPlayerId = battle.Games.LastOrDefault(x => x.BattleId == battle.Id)?.CurrentTurnPlayerId;
+
+            var lastgame = battle.Games.LastOrDefault(x => x.BattleId == battle.Id);
+
+            if (lastgame != null)
+            {
+                vm.ShouldAnswer =
+                    ((vm.CurrentTurnPlayerId == vm.Player1Id &&
+                      lastgame.GameState == GameStateIds.Player1AnswerQuestions) ||
+                     (vm.CurrentTurnPlayerId == vm.Player2Id && lastgame.GameState == GameStateIds.Player2AnswerQuestions));
+
+                vm.ShouldSelectCategory =
+                    ((vm.CurrentTurnPlayerId == vm.Player1Id && lastgame.GameState == GameStateIds.SelectCategory)) ||
+                    ((vm.CurrentTurnPlayerId == vm.Player2Id && lastgame.GameState == GameStateIds.SelectCategory));
+            }
+
 
             if (battle.Games != null)
                 vm.Game = Mapper.Map<List<GameViewModel>>(battle.Games);

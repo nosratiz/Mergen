@@ -27,6 +27,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using Mergen.Game.Api.API.Shop.InputModels;
 using FileOptions = Mergen.Core.Options.FileOptions;
 
 namespace Mergen.Game.Api.API.Accounts
@@ -78,7 +79,8 @@ namespace Mergen.Game.Api.API.Accounts
         [HttpPost]
         [Route("accounts")]
         [AllowAnonymous]
-        public async Task<ActionResult<ApiResultViewModel<AccountViewModel>>> Register([FromBody]RegisterInputModel inputModel, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<AccountViewModel>>> Register(
+            [FromBody] RegisterInputModel inputModel, CancellationToken cancellationToken)
         {
             var account = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
             if (account != null)
@@ -123,7 +125,8 @@ namespace Mergen.Game.Api.API.Accounts
 
             await _sessionManager.SaveAsync(session, cancellationToken);
 
-            return CreatedData(RegisterViewModel.GetRegisterViewModel(AccountViewModel.Map(account), SessionViewModel.Map(session)));
+            return CreatedData(RegisterViewModel.GetRegisterViewModel(AccountViewModel.Map(account),
+                SessionViewModel.Map(session)));
         }
 
         private async Task SetDefaultAvatar(Account account, CancellationToken cancellationToken)
@@ -134,8 +137,8 @@ namespace Mergen.Game.Api.API.Accounts
                     q.TypeId == ShopItemTypeIds.AvatarItem &&
                     q.DefaultAvatar == true &&
                     q.AvatarTypeId == avatarTypeId)
-                    .GroupBy(q => q.AvatarCategoryId).Select(q => q.First())
-                    .OrderBy(q => q.AvatarCategoryId)
+                .GroupBy(q => q.AvatarCategoryId).Select(q => q.First())
+                .OrderBy(q => q.AvatarCategoryId)
                 .ToListAsync(cancellationToken);
 
             if (defaultAvatarItems.Any())
@@ -179,7 +182,7 @@ namespace Mergen.Game.Api.API.Accounts
 
                 List<Avatar> avatars = new List<Avatar>();
                 foreach (var item in defaultAvatarItems)
-                    avatars.Add(new Avatar { Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value });
+                    avatars.Add(new Avatar {Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value});
 
                 account.AvatarItemIds = JsonConvert.SerializeObject(avatars);
                 await _accountManager.SaveAsync(account, cancellationToken);
@@ -188,7 +191,8 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpPut]
         [Route("accounts/{accountId}/avatar")]
-        public async Task<ActionResult> SetAvatarByAccountId([FromRoute] long accountId, [FromBody] SetAvatarInputModel input, CancellationToken cancellationToken)
+        public async Task<ActionResult> SetAvatarByAccountId([FromRoute] long accountId,
+            [FromBody] SetAvatarInputModel input, CancellationToken cancellationToken)
         {
             if (AccountId != accountId)
                 return Forbidden();
@@ -226,9 +230,8 @@ namespace Mergen.Game.Api.API.Accounts
                                 await _accountItemManager.SaveAsync(newAccountItem, cancellationToken);
                             }
                             else
-                            {
                                 return BadRequest("invalid_itemId", "AvatarItem not in AccountItems");
-                            }
+
                         }
                     }
                 }
@@ -268,7 +271,7 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/{accountId}/avatar")]
-        public async Task<ActionResult> GetAvatarByAccountId([FromRoute] long accountId, [FromQuery]bool head,
+        public async Task<ActionResult> GetAvatarByAccountId([FromRoute] long accountId, [FromQuery] bool head,
             CancellationToken cancellationToken)
         {
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
@@ -279,12 +282,13 @@ namespace Mergen.Game.Api.API.Accounts
             if (head)
                 return File(_fileService.GetFile($"{account.AvatarImageId}-h.png"), "image/png");
 
-            return File(_fileService.GetFile(account.AvatarImageId.ToString()), "image/png");
+            return File(_fileService.GetFile(account.AvatarImageId), "image/png");
         }
 
         [HttpGet]
         [Route("accounts/{accountId}/profile")]
-        public async Task<ActionResult<ApiResultViewModel<ProfileViewModel>>> GetPublicProfileByAccountId([FromRoute] int accountId,
+        public async Task<ActionResult<ApiResultViewModel<ProfileViewModel>>> GetPublicProfileByAccountId(
+            [FromRoute] int accountId,
             CancellationToken cancellationToken)
         {
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
@@ -298,7 +302,8 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/{accountId}/stats")]
-        public async Task<ActionResult<ApiResultViewModel<AccountStatsSummary>>> GetStatsByAccountId([FromRoute] long accountId,
+        public async Task<ActionResult<ApiResultViewModel<AccountStatsSummary>>> GetStatsByAccountId(
+            [FromRoute] long accountId,
             CancellationToken cancellationToken)
         {
             var accountStats = await _statsManager.GetByAccountIdAsync(accountId, cancellationToken);
@@ -309,17 +314,24 @@ namespace Mergen.Game.Api.API.Accounts
                 });
 
             var accountCategoryStats = await _dataContext.AccountCategoryStats.AsNoTracking()
-                .Include(q => q.Category).Where(q => q.AccountId == accountId).GroupBy(x => new { x.CategoryId, x.Category }).Take(5)
+                .Include(q => q.Category).Where(q => q.AccountId == accountId)
+                .GroupBy(x => new {x.CategoryId, x.Category}).Take(5)
                 .ToListAsync(cancellationToken);
 
-            var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel { CategoryId = x.Key.CategoryId, CategoryTitle = x.Key.Category.Title, CorrectAnswersCount = x.Sum(a => a.CorrectAnswersCount), TotalQuestionsCount = x.Sum(a => a.TotalQuestionsCount) });
+            var accountCategoryStatViewModels = accountCategoryStats.Select(x => new AccountCategoryStatViewModel
+            {
+                CategoryId = x.Key.CategoryId, CategoryTitle = x.Key.Category.Title,
+                CorrectAnswersCount = x.Sum(a => a.CorrectAnswersCount),
+                TotalQuestionsCount = x.Sum(a => a.TotalQuestionsCount)
+            });
 
             return OkData(AccountStatsSummaryViewModel.Map(accountStats, accountCategoryStatViewModels.ToList()));
         }
 
         [HttpGet]
         [Route("accounts/profiles")]
-        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts([FromQuery] string term, [FromQuery] string accountIds, [FromQuery]int page = 1, int pageSize = 30,
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> SearchAccounts(
+            [FromQuery] string term, [FromQuery] string accountIds, [FromQuery] int page = 1, int pageSize = 30,
             CancellationToken cancellationToken = default)
         {
             if (!string.IsNullOrWhiteSpace(term) && !string.IsNullOrWhiteSpace(accountIds))
@@ -327,7 +339,8 @@ namespace Mergen.Game.Api.API.Accounts
 
             var accountIdsArr = new long[0];
             if (!string.IsNullOrWhiteSpace(accountIds))
-                accountIdsArr = accountIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(q => long.Parse(q)).ToArray();
+                accountIdsArr = accountIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(q => long.Parse(q))
+                    .ToArray();
 
             var accounts = await _accountManager.SearchAsync(term, accountIdsArr, page, pageSize, cancellationToken);
             return OkData(ProfileViewModel.Map(accounts));
@@ -335,7 +348,8 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/{accountId}/friends")]
-        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> GetFriendsByAccountId([FromRoute] long accountId, CancellationToken cancellationToken)
+        public async Task<ActionResult<ApiResultViewModel<IEnumerable<ProfileViewModel>>>> GetFriendsByAccountId(
+            [FromRoute] long accountId, CancellationToken cancellationToken)
         {
             var friends = await _accountFriendManager.GetFriendsAsync(accountId, cancellationToken);
             return OkData(ProfileViewModel.Map(friends));
@@ -366,10 +380,13 @@ namespace Mergen.Game.Api.API.Accounts
                 return BadRequest("invalid_friendAccountId", "you cannot friend yourself");
 
             var friendAccount = await _accountManager.GetAsync(inputModel.FriendAccountId, cancellationToken);
+
             if (friendAccount == null || friendAccount.IsArchived)
                 return BadRequest("invalid_friendAcccountId", "friend account not found.");
 
-            var friendRequest = await _friendRequestManager.GetExistingRequest(accountId, inputModel.FriendAccountId, cancellationToken);
+            var friendRequest =
+                await _friendRequestManager.GetExistingRequest(accountId, inputModel.FriendAccountId,
+                    cancellationToken);
 
             if (friendRequest != null)
                 return BadRequest("already_exists", "Friend request already sent.");
@@ -393,7 +410,8 @@ namespace Mergen.Game.Api.API.Accounts
         [HttpGet]
         [Route("friendrequests")]
         public async Task<ActionResult<ApiResultViewModel<FriendRequest>>> GetFriendRequests(
-            [FromQuery] QueryInputModel<FriendRequestFilterInputModel> filterInputModel, CancellationToken cancellationToken)
+            [FromQuery] QueryInputModel<FriendRequestFilterInputModel> filterInputModel,
+            CancellationToken cancellationToken)
         {
             var fromAccountId = filterInputModel.FilterParameters.FirstOrDefault(q =>
                 q.FieldName == nameof(FriendRequestFilterInputModel.FromAccountId));
@@ -401,8 +419,10 @@ namespace Mergen.Game.Api.API.Accounts
             var toAccountId = filterInputModel.FilterParameters.FirstOrDefault(q =>
                 q.FieldName == nameof(FriendRequestFilterInputModel.ToAccountId));
 
-            if ((fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(), StringComparison.OrdinalIgnoreCase)) &&
-                 (toAccountId == null || !string.Equals(toAccountId.Values[0], AccountId.ToString(), StringComparison.OrdinalIgnoreCase)))
+            if ((fromAccountId == null || !string.Equals(fromAccountId.Values[0], AccountId.ToString(),
+                     StringComparison.OrdinalIgnoreCase)) &&
+                (toAccountId == null || !string.Equals(toAccountId.Values[0], AccountId.ToString(),
+                     StringComparison.OrdinalIgnoreCase)))
                 return Forbidden();
 
             var friendRequests = await _friendRequestManager.GetAllAsync(filterInputModel, cancellationToken);
@@ -416,6 +436,7 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var friendRequest = await _friendRequestManager.GetAsync(friendRequestId, cancellationToken);
+
             if (friendRequest == null)
                 return NotFound();
 
@@ -492,7 +513,8 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpGet]
         [Route("accounts/{accountId}")]
-        public async Task<ActionResult<AccountViewModel>> GetAccountById([FromRoute]string accountId, CancellationToken cancellationToken)
+        public async Task<ActionResult<AccountViewModel>> GetAccountById([FromRoute] string accountId,
+            CancellationToken cancellationToken)
         {
             var accId = int.Parse(accountId);
 
@@ -508,7 +530,8 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpPut]
         [Route("accounts/{accountId}")]
-        public async Task<ActionResult<AccountViewModel>> UpdateAccount([FromRoute] string accountId, [FromBody] AccountUpdateInputModel input, CancellationToken cancellationToken)
+        public async Task<ActionResult<AccountViewModel>> UpdateAccount([FromRoute] string accountId,
+            [FromBody] AccountUpdateInputModel input, CancellationToken cancellationToken)
         {
             var accId = int.Parse(accountId);
 
@@ -521,7 +544,8 @@ namespace Mergen.Game.Api.API.Accounts
 
             if (account.Nickname != input.Nickname)
             {
-                var existingAccountByUsername = await _accountManager.FindByNicknameAsync(input.Nickname, cancellationToken);
+                var existingAccountByUsername =
+                    await _accountManager.FindByNicknameAsync(input.Nickname, cancellationToken);
                 if (existingAccountByUsername != null)
                     return BadRequest("duplicate_username", "Another account exists using the same entered username.");
             }
@@ -537,9 +561,11 @@ namespace Mergen.Game.Api.API.Accounts
 
             if (account.PhoneNumber != input.PhoneNumber)
             {
-                var existingAccountByPhoneNumber = await _accountManager.FindByPhoneNumber(input.PhoneNumber, cancellationToken);
+                var existingAccountByPhoneNumber =
+                    await _accountManager.FindByPhoneNumber(input.PhoneNumber, cancellationToken);
                 if (existingAccountByPhoneNumber != null)
-                    return BadRequest("duplicate_phoneNumber", "Another account exists using the entered phone number.");
+                    return BadRequest("duplicate_phoneNumber",
+                        "Another account exists using the entered phone number.");
 
                 account.IsPhoneNumberVerified = false;
             }
@@ -564,7 +590,7 @@ namespace Mergen.Game.Api.API.Accounts
         [Route("accounts/resetpasswordrequests/{token}")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResultViewModel<ResetPasswordRequestViewModel>>> GetResetPasswordRequest(
-            [FromRoute]string token, [FromServices]IOptions<ResetPasswordOptions> options,
+            [FromRoute] string token, [FromServices] IOptions<ResetPasswordOptions> options,
             CancellationToken cancellationToken)
         {
             var existingAccount = await _accountManager.FindByResetPasswordTokenAsync(token, cancellationToken);
@@ -584,9 +610,11 @@ namespace Mergen.Game.Api.API.Accounts
         [Route("accounts/resetpasswordrequests")]
         [AllowAnonymous]
         public async Task<ActionResult<ApiResultViewModel<ResetPasswordRequestViewModel>>> ResetPasswordRequest(
-            [FromBody]ResetPasswordRequestInputModel inputModel, [FromServices] IEmailService emailService, CancellationToken cancellationToken)
+            [FromBody] ResetPasswordRequestInputModel inputModel, [FromServices] IEmailService emailService,
+            CancellationToken cancellationToken)
         {
             var existingAccount = await _accountManager.FindByEmailAsync(inputModel.Email, cancellationToken);
+
             if (existingAccount == null)
                 return BadRequest("account_not_found", "Account not found.");
 
@@ -643,7 +671,8 @@ namespace Mergen.Game.Api.API.Accounts
 
         [HttpPost]
         [Route("accounts/deactivated")]
-        public async Task<ActionResult> DeactivateAccountAsync(DeactivateAccountInputModel inputModel, CancellationToken cancellationToken)
+        public async Task<ActionResult> DeactivateAccountAsync(DeactivateAccountInputModel inputModel,
+            CancellationToken cancellationToken)
         {
             var account = await _accountManager.GetAsync(int.Parse(inputModel.AccountId), cancellationToken);
             if (account == null)
@@ -666,16 +695,40 @@ namespace Mergen.Game.Api.API.Accounts
             var accId = accountId.ToLong();
 
             var result = await (from achievementType in _dataContext.AchievementTypes.Where(q => q.IsArchived == false)
-                                join achievement in _dataContext.Achievements.Where(q => q.AccountId == accId) on achievementType.Id equals achievement.AchievementTypeId
-                                    into accountAchievement
-                                from a in accountAchievement.DefaultIfEmpty()
-                                select new AchievementViewModel
-                                {
-                                    AchievementType = AchievementTypeViewModel.Map(achievementType),
-                                    IsAchieved = a != null
-                                }).ToListAsync(cancellationToken);
+                join achievement in _dataContext.Achievements.Where(q => q.AccountId == accId) on achievementType.Id
+                    equals achievement.AchievementTypeId
+                    into accountAchievement
+                from a in accountAchievement.DefaultIfEmpty()
+                select new AchievementViewModel
+                {
+                    AchievementType = AchievementTypeViewModel.Map(achievementType),
+                    IsAchieved = a != null
+                }).ToListAsync(cancellationToken);
 
             return OkData(result);
+        }
+
+
+        [HttpGet]
+        [Route("accounts/{accountId}/ShopItems")]
+        [ProducesResponseType(typeof(List<ShopItem>), 200)]
+        public async Task<IActionResult> GetShopItems(long accountId, CancellationToken cancellationToken)
+        {
+            var account = await _accountManager.GetAsync(accountId, cancellationToken);
+            if (account == null)
+                return NotFound();
+
+            var payments = await _dataContext.Payments.Include(x => x.ShopItem)
+                .Where(x => x.IsArchived == false && x.AccountId == accountId).ToListAsync(cancellationToken);
+
+
+            List<ShopItem> shopItems = new List<ShopItem>();
+
+            foreach (var item in payments)
+                shopItems.Add(item.ShopItem);
+            
+
+            return Ok(ShopItemViewModel.MapAll(shopItems));
         }
     }
 }

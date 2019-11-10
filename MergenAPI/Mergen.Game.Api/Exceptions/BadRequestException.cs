@@ -1,6 +1,4 @@
-using Mergen.Game.Api.Exceptions;
-
-namespace MMergen.Game.ApiExceptions
+namespace Mergen.Game.Api.Exceptions
 {
     public class BadRequestException : ApiException
     {

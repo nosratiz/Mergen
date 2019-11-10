@@ -54,8 +54,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetActiveBattles([Required]long accountId, CancellationToken cancellationToken)
         {
             var activeBattles = await _dataContext.OneToOneBattles.AsNoTracking()
-                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired)
-                .Include(x => x.Games).ToListAsync(cancellationToken);
+                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired).Include(x=>x.Games).ToListAsync(cancellationToken);
 
             return OkData(await _battleMapper.MapAllAsync(activeBattles, cancellationToken));
         }
@@ -80,6 +79,15 @@ namespace Mergen.Game.Api.API.Battles
 
             if (currentPlayer == null)
                 return BadRequest("invalid_accountId", "Player1 account not found");
+
+            var activebattle = await _dataContext.OneToOneBattles.Where(x =>
+                x.IsArchived == false && x.WinnerPlayerId == null &&
+                (x.Player1Id == accountId || x.Player2Id == accountId)).ToListAsync(cancellationToken: cancellationToken);
+
+            if (activebattle.Count() > 5)
+                return BadRequest("Too many Active battle", "you can just allow to have 5 active battle");
+            
+
 
             OneToOneBattle battle;
             if (inputModel.BattleInvitationId != null)
@@ -113,7 +121,8 @@ namespace Mergen.Game.Api.API.Battles
         [Route("battles/{battleId}")]
         public async Task<ActionResult<ApiResultViewModel<OneToOneBattleViewModel>>> GetBattleById(long battleId, CancellationToken cancellationToken)
         {
-            var battle = await _dataContext.OneToOneBattles.Include(x => x.Games).FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
+            var battle = await _dataContext.OneToOneBattles.Include(x => x.Games)
+                .FirstOrDefaultAsync(q => q.Id == battleId, cancellationToken);
             return OkData(await _battleMapper.MapAsync(battle, cancellationToken));
         }
 
@@ -479,7 +488,6 @@ namespace Mergen.Game.Api.API.Battles
 
                             if (player1CorrectAnswersCount == 15)
                                 player1Stats.AceWinCount += 1;
-
                             // Experience for win
                             player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
                             player1Stats.Coins += player1CorrectAnswersCount + CoinBase * WinCoinMultiplier;
@@ -591,7 +599,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<IActionResult> RejectBattleInvitation([FromBody] long battleInvitationId,
             CancellationToken cancellationToken)
         {
-            return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Rejected, cancellationToken);
+            return await ChangeBattleInvitationStatus(battleInvitationId, cancellationToken);
         }
 
         [HttpPost]
@@ -599,7 +607,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<IActionResult> CancelBattleInvitation([FromBody] long battleInvitationId,
             CancellationToken cancellationToken)
         {
-            return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Cancelled, cancellationToken);
+            return await ChangeBattleInvitationStatus(battleInvitationId, cancellationToken);
         }
 
         [HttpPost]
@@ -607,7 +615,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<IActionResult> IgnoreBattleInvitation([FromBody] long battleInvitationId,
             CancellationToken cancellationToken)
         {
-            return await ChangeBattleInvitationStatus(battleInvitationId, BattleInvitationStatus.Ignored, cancellationToken);
+            return await ChangeBattleInvitationStatus(battleInvitationId, cancellationToken);
         }
 
         private async Task<int> CalculatePlayerSkyAsync(long accountId, CancellationToken cancellationToken)
@@ -644,9 +652,10 @@ namespace Mergen.Game.Api.API.Battles
             return sky;
         }
 
-        private async Task<IActionResult> ChangeBattleInvitationStatus(long battleInvitationId, BattleInvitationStatus status, CancellationToken cancellationToken)
+        private async Task<IActionResult> ChangeBattleInvitationStatus(long battleInvitationId, CancellationToken cancellationToken)
         {
             var invitation = await _dataContext.BattleInvitations.FirstOrDefaultAsync(q => q.Id == battleInvitationId, cancellationToken);
+
             if (invitation == null)
                 return NotFound();
 
@@ -655,6 +664,7 @@ namespace Mergen.Game.Api.API.Battles
 
             invitation.Status = BattleInvitationStatus.Rejected;
             await _dataContext.SaveChangesAsync(cancellationToken);
+
             return Ok();
         }
     }

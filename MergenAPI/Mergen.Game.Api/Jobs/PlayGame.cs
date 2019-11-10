@@ -38,7 +38,6 @@ namespace Mergen.Game.Api.Jobs
                     if (isBotPlayer is null)
                         continue;
 
-                    var gameCategories = await dataContext.GameCategories.Where(x => x.GameId == game.Id).ToListAsync();
                     var categoryId = new Random().Next(1, 3);
 
                     game.GameState = GameStateIds.Player2AnswerQuestions;

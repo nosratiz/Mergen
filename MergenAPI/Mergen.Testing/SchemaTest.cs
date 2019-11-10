@@ -25,12 +25,10 @@ namespace Mergen.Testing
             var sp = services.BuildServiceProvider();
             ApplicationEvents.ApplicationStart(sp, configuration);
 
-            using (var context = sp.GetRequiredService<DataContext>())
-            {
-                var comparer = new CompareEfSql();
-                var hasErrors = comparer.CompareEfWithDb(context);
-                hasErrors.ShouldBeFalse(comparer.GetAllErrors);
-            }
+            using var context = sp.GetRequiredService<DataContext>();
+            var comparer = new CompareEfSql();
+            var hasErrors = comparer.CompareEfWithDb(context);
+            hasErrors.ShouldBeFalse(comparer.GetAllErrors);
         }
     }
 }

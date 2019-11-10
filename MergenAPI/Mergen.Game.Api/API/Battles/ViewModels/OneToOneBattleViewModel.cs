@@ -19,5 +19,11 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public List<GameViewModel> Game { get; set; }
 
         public BattleStateIds BattleStateId { get; set; }
+
+        public bool ShouldAnswer { get; set; }
+
+        public bool ShouldSelectCategory { get; set; }
     }
+
+
 }

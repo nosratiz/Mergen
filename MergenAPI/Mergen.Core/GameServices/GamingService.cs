@@ -26,7 +26,8 @@ namespace Mergen.Core.GameServices
 
             var pendingBattle = await _dataContext.OneToOneBattles.OrderBy(q => q.CreationDateTime)
                 .Include(q => q.LastGame)
-                .FirstOrDefaultAsync(q => q.Player1Id != player1.Id && q.Player2Id == null && q.BattleStateId == BattleStateIds.WaitingForOpponent && q.IsArchived == false, cancellationToken);
+                .FirstOrDefaultAsync(q => q.Player1Id != player1.Id && q.Player2Id == null 
+                                                                    && q.BattleStateId == BattleStateIds.WaitingForOpponent && q.IsArchived == false, cancellationToken);
 
             if (pendingBattle != null)
             {
@@ -111,7 +112,7 @@ namespace Mergen.Core.GameServices
             CancellationToken cancellationToken = default)
         {
             var battle = await _dataContext.OneToOneBattles.Include(q => q.LastGame).ThenInclude(q => q.GameCategories)
-                .FirstAsync(q => q.Id == battleId, cancellationToken: cancellationToken);
+                .FirstAsync(q => q.Id == battleId, cancellationToken);
 
             if (battle.LastGame.CurrentTurnPlayerId != playerId)
                 return Result.Error(StatusCode.Forbidden);
@@ -124,11 +125,13 @@ namespace Mergen.Core.GameServices
 
             // add random questions to battle
             var questions = await _dataContext.QuestionCategories.Where(q => q.CategoryId == categoryId).OrderBy(r => Guid.NewGuid()).Take(3).ToListAsync(cancellationToken);
+    
             var gameQuestions = questions.Select(q => new GameQuestion
             {
                 GameId = battle.LastGameId.Value,
                 QuestionId = q.QuestionId
             });
+      
             battle.LastGame.GameQuestions = gameQuestions.ToList();
 
             battle.BattleStateId = BattleStateIds.AnsweringQuestions;
@@ -148,6 +151,7 @@ namespace Mergen.Core.GameServices
             {
                 var randomCategory = await _dataContext.Categories.Where(q => q.IsArchived == false).OrderBy(q => Guid.NewGuid())
                     .FirstOrDefaultAsync(cancellationToken);
+            
                 if (randomCategory != null && !oldCategories.Contains(randomCategory.Id) && randomCategoryIds.Add(randomCategory.Id))
                 {
                     game.GameCategories.Add(new GameCategory
