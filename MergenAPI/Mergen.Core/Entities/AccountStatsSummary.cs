@@ -6,6 +6,7 @@ namespace Mergen.Core.Entities
     public class AccountStatsSummary : Entity
     {
         public long AccountId { get; set; }
+
         public int Level { get; set; }
         public int Sky { get; set; }
         public int Rank { get; set; }

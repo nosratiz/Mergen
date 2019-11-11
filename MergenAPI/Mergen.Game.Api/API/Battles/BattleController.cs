@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Transactions;
+using Mergen.Game.Api.API.Accounts.ViewModels;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -58,7 +59,7 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetActiveBattles([Required]long accountId, CancellationToken cancellationToken)
         {
             var activeBattles = await _dataContext.OneToOneBattles.AsNoTracking()
-                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired).Include(x=>x.Games).ToListAsync(cancellationToken);
+                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired).Include(x => x.Games).ToListAsync(cancellationToken);
 
             return OkData(await _battleMapper.MapAllAsync(activeBattles, cancellationToken));
         }
@@ -90,7 +91,7 @@ namespace Mergen.Game.Api.API.Battles
 
             if (activebattle.Count() > 5)
                 return BadRequest("Too many Active battle", "you can just allow to have 5 active battle");
-            
+
 
 
             OneToOneBattle battle;
@@ -482,6 +483,7 @@ namespace Mergen.Game.Api.API.Battles
 
                         if (player1CorrectAnswersCount > player2CorrectAnswersCount)
                             battle.WinnerPlayerId = battle.Player1Id;
+
                         else if (player2CorrectAnswersCount > player1CorrectAnswersCount)
                             battle.WinnerPlayerId = battle.Player2Id;
 
@@ -500,7 +502,7 @@ namespace Mergen.Game.Api.API.Battles
                             player1Stats.WinCount += 1;
                             player2Stats.LoseCount += 1;
 
-                            if (player1CorrectAnswersCount == 15)
+                            if (player1CorrectAnswersCount == 18)
                                 player1Stats.AceWinCount += 1;
                             // Experience for win
                             player1Stats.Score += player1CorrectAnswersCount + ExperienceBase * WinExperienceMultiplier;
@@ -515,7 +517,7 @@ namespace Mergen.Game.Api.API.Battles
                             player1Stats.LoseCount += 1;
                             player2Stats.WinCount += 1;
 
-                            if (player2CorrectAnswersCount == 15)
+                            if (player2CorrectAnswersCount == 18)
                                 player2Stats.AceWinCount += 1;
 
                             // Experience for win
@@ -546,6 +548,21 @@ namespace Mergen.Game.Api.API.Battles
                         await _achievementService.ProcessBattleAchievementsAsync(battle, player1Stats, player2Stats,
                             cancellationToken);
 
+                        var account = await _accountManager.GetAsync(game.CurrentTurnPlayerId.Value, cancellationToken);
+
+                        var accountNotifId = game.CurrentTurnPlayerId == player1Stats.AccountId
+                            ? player2Stats.AccountId
+                            : player1Stats.AccountId;
+
+                        await _notificationManager.SaveAsync(
+                            new Core.Entities.Notification
+                            {
+                                AccountId = accountNotifId,
+                                Body = $"Your battle Finish with{account.Email}",
+                                NotificationTypeId = NotificationTypeIds.BattleCompleted,
+                                Title = "Battle Completed"
+                            }, cancellationToken);
+
                         await _dataContext.SaveChangesAsync(cancellationToken);
 
                         // Calculate Sky
@@ -559,7 +576,7 @@ namespace Mergen.Game.Api.API.Battles
                         battle.LastGame = newGame;
                     }
                 }
-               
+
                 else
                 {
                     var battle = await _dataContext.OneToOneBattles
@@ -571,14 +588,7 @@ namespace Mergen.Game.Api.API.Battles
                     game.CurrentTurnPlayerId = nextPlayer?.Id;
                     game.GameState = game.CurrentTurnPlayerId == battle.Player1Id ? GameStateIds.Player1AnswerQuestions : GameStateIds.Player2AnswerQuestions;
 
-                    //await _notificationManager.SaveAsync(
-                    //    new Core.Entities.Notification
-                    //    {
-                    //        AccountId = nextPlayer.Id,
-                    //        Body = $"",
-                    //        NotificationTypeId = NotificationTypeIds.GameTurn,
-                    //        Title = "your Turn"
-                    //    }, cancellationToken);
+
                 }
 
                 await _dataContext.SaveChangesAsync(cancellationToken);
@@ -640,6 +650,21 @@ namespace Mergen.Game.Api.API.Battles
             CancellationToken cancellationToken)
         {
             return await ChangeBattleInvitationStatus(battleInvitationId, cancellationToken);
+        }
+
+
+        [HttpGet]
+        [Route("Battle/TopRank")]
+        public async Task<IActionResult> GetTopRankPlayer(CancellationToken cancellationToken)
+        {
+            var topPlayer = await _dataContext.AccountStatsSummaries.OrderByDescending(x => x.Score).Take(20)
+                .ToListAsync(cancellationToken);
+
+            var player = topPlayer.Select( p =>
+                AccountStatsSummaryViewModel.Map(p,  _dataContext.Accounts.FirstOrDefault(x=>x.Id==p.AccountId))).ToList();
+          
+            return OkData(player);
+
         }
 
         private async Task<int> CalculatePlayerSkyAsync(long accountId, CancellationToken cancellationToken)

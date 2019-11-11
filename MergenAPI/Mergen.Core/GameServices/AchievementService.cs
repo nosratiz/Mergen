@@ -133,12 +133,13 @@ namespace Mergen.Core.GameServices
                             {
                                 AccountId = playerStat.AccountId,
                                 AchievementTypeId = a.Id,
-                                AchieveDateTime = DateTime.UtcNow
+                                AchieveDateTime = DateTime.UtcNow,
+                                TitleAchievement = $"Category {catStat.Category.Title}"
                             });
                         }
                     }
                 }
-                else if (a.RemoveTwoAnswersHelperUsageCount != null)
+                if (a.RemoveTwoAnswersHelperUsageCount != null)
                 {
                     if (playerStat.RemoveTwoAnswersHelperUsageCount >= a.RemoveTwoAnswersHelperUsageCount)
                     {
@@ -146,11 +147,12 @@ namespace Mergen.Core.GameServices
                         {
                             AccountId = playerStat.AccountId,
                             AchievementTypeId = a.Id,
-                            AchieveDateTime = DateTime.UtcNow
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Facilitates Remove Two Answers {a.Title}"
                         });
                     }
                 }
-                else if (a.AnswerHistoryHelperUsageCount != null)
+                if (a.AnswerHistoryHelperUsageCount != null)
                 {
                     if (playerStat.AnswerHistoryHelperUsageCount >= a.AnswerHistoryHelperUsageCount)
                     {
@@ -158,11 +160,12 @@ namespace Mergen.Core.GameServices
                         {
                             AccountId = playerStat.AccountId,
                             AchievementTypeId = a.Id,
-                            AchieveDateTime = DateTime.UtcNow
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Facilitates Answer History {a.Title}"
                         });
                     }
                 }
-                else if (a.AskMergenHelperUsageCount != null)
+                if (a.AskMergenHelperUsageCount != null)
                 {
                     if (playerStat.AskMergenHelperUsageCount >= a.AskMergenHelperUsageCount)
                     {
@@ -170,11 +173,12 @@ namespace Mergen.Core.GameServices
                         {
                             AccountId = playerStat.AccountId,
                             AchievementTypeId = a.Id,
-                            AchieveDateTime = DateTime.UtcNow
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Facilitates Ask Mergen Helper {a.Title}"
                         });
                     }
                 }
-                else if (a.DoubleChanceHelperUsageCount != null)
+                if (a.DoubleChanceHelperUsageCount != null)
                 {
                     if (playerStat.DoubleChanceHelperUsageCount >= a.DoubleChanceHelperUsageCount)
                     {
@@ -182,10 +186,117 @@ namespace Mergen.Core.GameServices
                         {
                             AccountId = playerStat.AccountId,
                             AchievementTypeId = a.Id,
-                            AchieveDateTime = DateTime.UtcNow
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Facilitates Double Chance Helper {a.Title}"
                         });
                     }
                 }
+
+                if (a.NumberOfContinuousDaysPlaying != null)
+                {
+                    //for (int i = 0; i < 30; i++)
+                    //{
+                    //    var continuous = await _context.OneToOneBattles.AnyAsync(x =>
+                    //        x.IsArchived == false && x.StartDateTime == DateTime.Today.AddDays(-i), cancellationToken);
+
+                    //    if (continuous)
+                    //    {
+                    //        playerStat.ContinuousActiveDaysCount += 1;
+                    //        _context.AccountStatsSummaries.Update(playerStat);
+                    //        await _context.SaveChangesAsync(cancellationToken);
+                    //    }
+                    //    else
+                    //        break;
+
+
+                    //}
+
+                    if (a.NumberOfContinuousDaysPlaying == playerStat.ContinuousActiveDaysCount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Continuous days play {a.Title}"
+                        });
+                    }
+
+
+                }
+
+                if (a.GiftedCoinsAmount != null)
+                {
+                    if (playerStat.GiftedCoins == a.GiftedCoinsAmount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Generous {a.Title}"
+                        });
+                    }
+                }
+
+                if (a.NumberOfTotalBattlesPlayed != null)
+                {
+                    if (a.NumberOfTotalBattlesPlayed == playerStat.TotalBattlesPlayed)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Total Games {a.Title}"
+                        });
+                    }
+                }
+
+                if (a.NumberOfSuccessfulBattleInvitations != null)
+                {
+                    if (a.NumberOfSuccessfulBattleInvitations == playerStat.InvitedPlayersCount)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Invite {a.Title}"
+                        });
+                    }
+                }
+
+                if (a.CoinsSpentOnAvatarItems != null)
+                {
+                    if (a.CoinsSpentOnAvatarItems == playerStat.CoinsSpentOnAvatarItems)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Avatar {a.Title}"
+                        });
+                    }
+                }
+
+                if (a.CoinsSpentOnBooster != null)
+                {
+                    if (a.CoinsSpentOnBooster == playerStat.CoinsSpentOnBoosterItems)
+                    {
+                        _context.Achievements.Add(new Achievement
+                        {
+                            AccountId = playerStat.AccountId,
+                            AchievementTypeId = a.Id,
+                            AchieveDateTime = DateTime.UtcNow,
+                            TitleAchievement = $"Boost {a.Title}"
+                        });
+                    }
+
+                }
+
+
             }
 
             await _context.SaveChangesAsync(cancellationToken);
@@ -217,5 +328,8 @@ namespace Mergen.Core.GameServices
                 }
             }
         }
+
+
+
     }
 }

@@ -8,6 +8,8 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
     public class AccountStatsSummaryViewModel
     {
         public long AccountId { get; set; }
+
+        public string FullName { get; set; }
         public int Level { get; set; }
         public int Sky { get; set; }
         public int Rank { get; set; }
@@ -28,17 +30,32 @@ namespace Mergen.Game.Api.API.Accounts.ViewModels
         public int UnlockedAchievements { get; set; }
         public IEnumerable<AccountCategoryStatViewModel> Top5CategoryStats { get; set; }
 
-        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, List<AccountCategoryStat> categoryStats)
+        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats,
+            List<AccountCategoryStat> categoryStats)
         {
             var model = AutoMapper.Mapper.Map<AccountStatsSummaryViewModel>(stats);
             model.Top5CategoryStats = categoryStats.Select(AccountCategoryStatViewModel.Map);
+
             return model;
         }
 
-        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, List<AccountCategoryStatViewModel> categoryStats)
+        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats,
+            List<AccountCategoryStatViewModel> categoryStats)
         {
             var model = AutoMapper.Mapper.Map<AccountStatsSummaryViewModel>(stats);
             model.Top5CategoryStats = categoryStats;
+
+            return model;
+        }
+
+        public static AccountStatsSummaryViewModel Map(AccountStatsSummary stats, Account account)
+        {
+            var model = AutoMapper.Mapper.Map<AccountStatsSummaryViewModel>(stats);
+           
+                model.FullName = !string.IsNullOrWhiteSpace(account.FirstName)
+                    ? $"{account.FirstName} {account.LastName}"
+                    : account.Nickname;
+                
             return model;
         }
     }

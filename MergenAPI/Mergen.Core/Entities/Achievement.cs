@@ -9,5 +9,8 @@ namespace Mergen.Core.Entities
         public long AchievementTypeId { get; set; }
         public AchievementType AchievementType { get; set; }
         public DateTime AchieveDateTime { get; set; }
+
+        public string TitleAchievement { get; set; }
+
     }
 }
