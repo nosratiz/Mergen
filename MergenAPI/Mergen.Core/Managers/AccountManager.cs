@@ -58,7 +58,7 @@ namespace Mergen.Core.Managers
             }
         }
 
-        public async Task<IEnumerable<(Account account, AccountStatsSummary stats)>> SearchAsync(string term, long[] accountIds, int page = 1, int pageSize = 30, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<(Account account, AccountStatsSummary stats)>> SearchAsync(string term, long accountOwnerId, long[] accountIds, int page = 1, int pageSize = 30, CancellationToken cancellationToken = default)
         {
             using (var dbc = CreateDbContext())
             {
@@ -77,7 +77,7 @@ namespace Mergen.Core.Managers
                                 select new { acc, stats };
 
                     if (!string.IsNullOrWhiteSpace(term))
-                        query = query.Where(q => q.acc.Nickname.Contains(term));
+                        query = query.Where(q => q.acc.Nickname.Contains(term) && q.acc.Id != accountOwnerId);
 
                     return (await query.Skip((page - 1) * pageSize).Take(page * pageSize).ToListAsync(cancellationToken)).Select(q => (q.acc, q.stats));
                 }

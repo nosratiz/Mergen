@@ -32,6 +32,8 @@ namespace Mergen.Game.Api.API.Battles
         private readonly GameSettings _gameSettingsOptions;
         private readonly NotificationManager _notificationManager;
         private readonly AccountManager _accountManager;
+        private readonly BattleManager _battleManager;
+        private readonly StatsManager _statsManager;
 
         private const int ExperienceBase = 10;
         private const int WinExperienceMultiplier = 3;
@@ -42,7 +44,7 @@ namespace Mergen.Game.Api.API.Battles
         private const int WinCoinMultiplier = 2;
         private const int LoseCoinMultiplier = 1;
 
-        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager, AchievementService achievementService, NotificationManager notificationManager, AccountManager accountManager)
+        public BattleController(DataContext dataContext, GamingService gamingService, BattleMapper battleMapper, IOptions<GameSettings> gameSettingsOptions, LevelManager levelManager, AchievementService achievementService, NotificationManager notificationManager, AccountManager accountManager, BattleManager battleManager)
         {
             _dataContext = dataContext;
             _gamingService = gamingService;
@@ -51,6 +53,7 @@ namespace Mergen.Game.Api.API.Battles
             _achievementService = achievementService;
             _notificationManager = notificationManager;
             _accountManager = accountManager;
+            _battleManager = battleManager;
             _gameSettingsOptions = gameSettingsOptions.Value;
         }
 
@@ -59,7 +62,9 @@ namespace Mergen.Game.Api.API.Battles
         public async Task<ActionResult<ApiResultViewModel<IEnumerable<OneToOneBattleViewModel>>>> GetActiveBattles([Required]long accountId, CancellationToken cancellationToken)
         {
             var activeBattles = await _dataContext.OneToOneBattles.AsNoTracking()
-                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired).Include(x => x.Games).ToListAsync(cancellationToken);
+                .Where(q => q.IsArchived == false && (q.Player1Id == accountId || q.Player2Id == accountId) && q.BattleStateId != BattleStateIds.Completed && q.BattleStateId != BattleStateIds.Expired)
+                .Include(x => x.Games).ThenInclude(x => x.GameQuestions).ThenInclude(x => x.Question).ToListAsync(cancellationToken);
+
 
             return OkData(await _battleMapper.MapAllAsync(activeBattles, cancellationToken));
         }
@@ -103,9 +108,11 @@ namespace Mergen.Game.Api.API.Battles
 
                 battleInvitation.Status = BattleInvitationStatus.Accepted;
 
+
                 var inviterPlayerStats = await _dataContext.AccountStatsSummaries.FirstAsync(q => q.IsArchived == false &&
                                                                                                   q.AccountId == battleInvitation.InviterAccountId, cancellationToken);
                 inviterPlayerStats.SuccessfulBattleInvitationsCount += 1;
+
                 var account = await _accountManager.GetAsync(accountId, cancellationToken);
                 await _achievementService.ProcessSuccessfulBattleInvitationAchievements(battleInvitation, inviterPlayerStats, cancellationToken);
 
@@ -369,7 +376,7 @@ namespace Mergen.Game.Api.API.Battles
                     foreach (var category in gq.Question.QuestionCategories)
                     {
                         var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.CategoryId == category.Id, cancellationToken);
-                       
+
                         if (playerCategoryStat == null)
                         {
                             playerCategoryStat = new AccountCategoryStat
@@ -502,9 +509,14 @@ namespace Mergen.Game.Api.API.Battles
                         {
                             player1Stats.WinCount += 1;
                             player2Stats.LoseCount += 1;
-                            player1Stats.LastPlayDateTime=DateTime.Now;
-                            player2Stats.LastPlayDateTime=DateTime.Now;
-                            ;
+                            player1Stats.LastPlayDateTime = DateTime.Now;
+                            player2Stats.LastPlayDateTime = DateTime.Now;
+
+                            if (await _battleManager.HasPlayedYesterday(player1Stats.AccountId, cancellationToken))
+                                player1Stats.ContinuousActiveDaysCount += 1;
+
+                            if (await _battleManager.HasPlayedYesterday(player2Stats.AccountId, cancellationToken))
+                                player2Stats.ContinuousActiveDaysCount += 1;
 
 
                             if (player1CorrectAnswersCount == 18)
@@ -632,7 +644,7 @@ namespace Mergen.Game.Api.API.Battles
             var invitations = await _dataContext.BattleInvitations
                 .Include(q => q.InviterAccount)
                 .Where(q => q.AccountId == accountId && q.Status == BattleInvitationStatus.Pending).ToListAsync(cancellationToken);
-           
+
             return OkData(BattleInvitationViewModel.MapAll(invitations));
         }
 
@@ -668,9 +680,9 @@ namespace Mergen.Game.Api.API.Battles
             var topPlayer = await _dataContext.AccountStatsSummaries.OrderByDescending(x => x.Score).Take(20)
                 .ToListAsync(cancellationToken);
 
-            var player = topPlayer.Select( p =>
-                AccountStatsSummaryViewModel.Map(p,  _dataContext.Accounts.FirstOrDefault(x=>x.Id==p.AccountId))).ToList();
-          
+            var player = topPlayer.Select(p =>
+               AccountStatsSummaryViewModel.Map(p, _dataContext.Accounts.FirstOrDefault(x => x.Id == p.AccountId))).ToList();
+
             return OkData(player);
 
         }

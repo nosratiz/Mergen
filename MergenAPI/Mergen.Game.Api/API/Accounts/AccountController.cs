@@ -299,6 +299,10 @@ namespace Mergen.Game.Api.API.Accounts
 
             var stats = await _statsManager.GetByAccountIdAsync(accountId, cancellationToken);
 
+            var accountStats = await _statsManager.GetByAccountIdAsync(accountId, cancellationToken);
+
+            accountStats.Rank = await _statsManager.GetRank(accountStats.Score);
+
             return OkData(ProfileViewModel.Map(account, stats));
         }
 
@@ -348,7 +352,7 @@ namespace Mergen.Game.Api.API.Accounts
                 accountIdsArr = accountIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(q => long.Parse(q))
                     .ToArray();
 
-            var accounts = await _accountManager.SearchAsync(term, accountIdsArr, page, pageSize, cancellationToken);
+            var accounts = await _accountManager.SearchAsync(term,AccountId, accountIdsArr, page, pageSize, cancellationToken);
             return OkData(ProfileViewModel.Map(accounts));
         }
 
@@ -358,7 +362,16 @@ namespace Mergen.Game.Api.API.Accounts
             [FromRoute] long accountId, CancellationToken cancellationToken)
         {
             var friends = await _accountFriendManager.GetFriendsAsync(accountId, cancellationToken);
-            return OkData(ProfileViewModel.Map(friends));
+
+            List<ProfileViewModel> profileViewModels = new List<ProfileViewModel>();
+
+            foreach (var people in friends)
+            {
+                people.stats.Rank = await _statsManager.GetRank(people.stats.Score);
+                profileViewModels.Add(ProfileViewModel.Map(people.account, people.stats));
+            }
+
+            return OkData(profileViewModels);
         }
 
         [HttpDelete]

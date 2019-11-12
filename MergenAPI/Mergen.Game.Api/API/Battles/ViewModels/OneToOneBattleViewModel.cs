@@ -23,6 +23,8 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public bool ShouldAnswer { get; set; }
 
         public bool ShouldSelectCategory { get; set; }
+
+        public List<PlayerCorrectAnswer> PlayerCorrectAnswers { get; set; }
     }
 
 

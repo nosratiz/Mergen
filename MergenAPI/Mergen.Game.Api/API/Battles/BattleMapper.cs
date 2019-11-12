@@ -1,3 +1,4 @@
+using System;
 using AutoMapper;
 using Mergen.Core.Entities;
 using Mergen.Game.Api.API.Battles.ViewModels;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Core.EntityIds;
+using Microsoft.Extensions.Logging;
 
 namespace Mergen.Game.Api.API.Battles
 {
@@ -22,16 +24,38 @@ namespace Mergen.Game.Api.API.Battles
         {
             var vm = Mapper.Map<OneToOneBattleViewModel>(battle);
 
-            vm.CurrentTurnPlayerId = battle.Games.LastOrDefault(x => x.BattleId == battle.Id)?.CurrentTurnPlayerId;
+            List<PlayerCorrectAnswer> playerCorrectAnswers = new List<PlayerCorrectAnswer>();
 
-            var lastgame = battle.Games.LastOrDefault(x => x.BattleId == battle.Id);
+            foreach (var answer in battle.Games)
+            {
+                playerCorrectAnswers.Add(new PlayerCorrectAnswer
+                {
+                    GameId = answer.Id,
+                    Player1CorrectAnswer = answer.GameQuestions.Sum(q => q.Player1SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0),
+                    Player2CorrectAnswer = answer.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0)
+
+                });
+            }
+
+            vm.PlayerCorrectAnswers = playerCorrectAnswers;
+
+            var games = battle.Games.OrderBy(x => x.Id);
+
+            var lastgame = games.LastOrDefault(x => x.BattleId == vm.Id);
+
+            if (battle.Games != null)
+                vm.Game = Mapper.Map<List<GameViewModel>>(battle.Games);
 
             if (lastgame != null)
             {
+                vm.CurrentTurnPlayerId = lastgame.CurrentTurnPlayerId;
+
+
                 vm.ShouldAnswer =
                     ((vm.CurrentTurnPlayerId == vm.Player1Id &&
                       lastgame.GameState == GameStateIds.Player1AnswerQuestions) ||
-                     (vm.CurrentTurnPlayerId == vm.Player2Id && lastgame.GameState == GameStateIds.Player2AnswerQuestions));
+                     (vm.CurrentTurnPlayerId == vm.Player2Id &&
+                      lastgame.GameState == GameStateIds.Player2AnswerQuestions));
 
                 vm.ShouldSelectCategory =
                     ((vm.CurrentTurnPlayerId == vm.Player1Id && lastgame.GameState == GameStateIds.SelectCategory)) ||
@@ -39,8 +63,7 @@ namespace Mergen.Game.Api.API.Battles
             }
 
 
-            if (battle.Games != null)
-                vm.Game = Mapper.Map<List<GameViewModel>>(battle.Games);
+
 
             vm.Player1MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);
 
