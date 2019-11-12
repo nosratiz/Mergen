@@ -27,5 +27,20 @@ namespace Mergen.Game.Api.API.Notification
 
             return OkData(notification);
         }
+
+        [HttpDelete]
+        [Route("Notification/{id}")]
+        public async Task<IActionResult> DeleteNotification([FromRoute] long id, CancellationToken cancellationToken)
+        {
+            var notification = await _notificationManager.GetAsync(id, cancellationToken);
+
+            if (notification is null)
+                return NotFound("Notification Not Found", "the notification you want to delete was not found");
+
+            await _notificationManager.DeleteAsync(notification, cancellationToken);
+
+            return NoContent();
+
+        }
     }
 }

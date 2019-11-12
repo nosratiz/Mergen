@@ -369,6 +369,7 @@ namespace Mergen.Game.Api.API.Battles
                     foreach (var category in gq.Question.QuestionCategories)
                     {
                         var playerCategoryStat = await _dataContext.AccountCategoryStats.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.CategoryId == category.Id, cancellationToken);
+                       
                         if (playerCategoryStat == null)
                         {
                             playerCategoryStat = new AccountCategoryStat
@@ -387,7 +388,7 @@ namespace Mergen.Game.Api.API.Battles
 
                     if (answer.UsedAnswersHistoryHelper)
                     {
-                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ItemTypeId == ShopItemTypeIds.Coin, cancellationToken);
+                        var accountCoin = await _dataContext.AccountItems.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId && q.ShopItemId == ShopItemTypeIds.Coin, cancellationToken);
                         if (accountCoin == null || accountCoin.Quantity < _gameSettingsOptions.AnswersHistoryHelperPrice)
                         {
                             // TODO: cheat detected
@@ -501,6 +502,10 @@ namespace Mergen.Game.Api.API.Battles
                         {
                             player1Stats.WinCount += 1;
                             player2Stats.LoseCount += 1;
+                            player1Stats.LastPlayDateTime=DateTime.Now;
+                            player2Stats.LastPlayDateTime=DateTime.Now;
+                            ;
+
 
                             if (player1CorrectAnswersCount == 18)
                                 player1Stats.AceWinCount += 1;
@@ -624,7 +629,10 @@ namespace Mergen.Game.Api.API.Battles
         [Route("accounts/{accountId}/battleinvitations")]
         public async Task<ActionResult<ApiResultViewModel<BattleInvitationViewModel>>> GetBattleInvitations([FromRoute] long accountId, CancellationToken cancellationToken)
         {
-            var invitations = await _dataContext.BattleInvitations.Include(q => q.InviterAccount).Where(q => q.AccountId == accountId && q.Status == BattleInvitationStatus.Pending).ToListAsync(cancellationToken);
+            var invitations = await _dataContext.BattleInvitations
+                .Include(q => q.InviterAccount)
+                .Where(q => q.AccountId == accountId && q.Status == BattleInvitationStatus.Pending).ToListAsync(cancellationToken);
+           
             return OkData(BattleInvitationViewModel.MapAll(invitations));
         }
 

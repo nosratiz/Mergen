@@ -25,5 +25,15 @@ namespace Mergen.Core.Managers
                     .ToListAsync(cancellationToken);
             }
         }
+
+        public async Task<Notification> GEtNotificationAsync(long id, long accountId, CancellationToken cancellationToken)
+        {
+            using (var dbc = CreateDbContext())
+            {
+                return await dbc.Notifications.FirstOrDefaultAsync(
+                    x => x.IsArchived == false && x.Id == id && x.AccountId == accountId,
+                    cancellationToken: cancellationToken);
+            }
+        }
     }
 }
