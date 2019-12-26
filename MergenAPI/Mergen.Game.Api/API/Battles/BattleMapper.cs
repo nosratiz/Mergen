@@ -1,4 +1,3 @@
-using System;
 using AutoMapper;
 using Mergen.Core.Entities;
 using Mergen.Game.Api.API.Battles.ViewModels;
@@ -7,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mergen.Core.EntityIds;
-using Microsoft.Extensions.Logging;
 
 namespace Mergen.Game.Api.API.Battles
 {

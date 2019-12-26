@@ -30,7 +30,7 @@ namespace Mergen.Api.Core.Security.AuthenticationSystem
                 ValidIssuer = tokenConfig.Issuer,
                 ClockSkew = tokenConfig.Expiretion,
                 ValidAudience = tokenConfig.Audience,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenConfig.SecretKey))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("hello!@3#49659asfasdf"))
             };
 
             var authBuilder = services
