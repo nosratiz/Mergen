@@ -306,10 +306,10 @@ namespace Mergen.Game.Api.API.Battles
                     return NotFound();
 
                 if (game.GameState == GameStateIds.Completed || game.GameState == GameStateIds.SelectCategory)
-                    return BadRequest("invalid_gameState");
+                    return BadRequest("invalid_gameState","invalid_gameState");
 
                 if (game.CurrentTurnPlayerId != AccountId)
-                    return BadRequest("invalid_turn");
+                    return BadRequest("invalid_turn","invalid_turn");
 
                 var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId, cancellationToken);
                 if (playerStat == null)
@@ -323,7 +323,7 @@ namespace Mergen.Game.Api.API.Battles
                 }
 
                 if (inputModel.Answers.Count() != game.GameQuestions.Count)
-                    return BadRequest("invalid_answersCount");
+                    return BadRequest("invalid_answersCount","invalid_answersCount");
 
                 var changedCategoryStats = new List<AccountCategoryStat>();
 

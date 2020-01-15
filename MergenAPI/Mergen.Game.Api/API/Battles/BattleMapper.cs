@@ -60,9 +60,6 @@ namespace Mergen.Game.Api.API.Battles
                     ((vm.CurrentTurnPlayerId == vm.Player2Id && lastgame.GameState == GameStateIds.SelectCategory));
             }
 
-
-
-
             vm.Player1MiniProfile = await _playerMiniProfileCache.GetMiniProfileAsync(battle.Player1Id, cancellationToken);
 
             if (battle.Player2Id.HasValue)

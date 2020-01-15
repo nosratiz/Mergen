@@ -294,6 +294,7 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var account = await _accountManager.GetAsync(accountId, cancellationToken);
+
             if (account == null)
                 return NotFound();
 
@@ -352,9 +353,11 @@ namespace Mergen.Game.Api.API.Accounts
                 accountIdsArr = accountIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(q => long.Parse(q))
                     .ToArray();
 
-            var accounts = await _accountManager.SearchAsync(term,AccountId, accountIdsArr, page, pageSize, cancellationToken);
+            var accounts = await _accountManager.SearchAsync(term, AccountId, accountIdsArr, page, pageSize, cancellationToken);
             return OkData(ProfileViewModel.Map(accounts));
         }
+
+
 
         [HttpGet]
         [Route("accounts/{accountId}/friends")]
@@ -374,6 +377,7 @@ namespace Mergen.Game.Api.API.Accounts
             return OkData(profileViewModels);
         }
 
+
         [HttpDelete]
         [Route("accounts/{accountId}/friends/{friendAccountId}")]
         public async Task<ActionResult> DeleteFriendshipAsync([FromRoute] long accountId,
@@ -386,6 +390,7 @@ namespace Mergen.Game.Api.API.Accounts
 
             return Ok();
         }
+
 
         [HttpPost]
         [Route("accounts/{accountId}/friendrequests")]
@@ -454,10 +459,7 @@ namespace Mergen.Game.Api.API.Accounts
                      StringComparison.OrdinalIgnoreCase)))
                 return Forbidden();
 
-
             var friendRequests = await _friendRequestManager.GetAllAsync(filterInputModel, cancellationToken);
-
-
 
             return OkData(friendRequests.Data, friendRequests.TotalCount);
         }

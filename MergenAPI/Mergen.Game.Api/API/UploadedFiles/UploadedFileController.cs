@@ -26,7 +26,7 @@ namespace Mergen.Game.Api.API.UploadedFiles
             if (file == null)
                 return NotFound();
 
-            return File(_fileService.GetFile(file.FileId), file.MimeType, true);
+            return File(_fileService.GetFile(file.FileId), file.MimeType);
         }
     }
 }
