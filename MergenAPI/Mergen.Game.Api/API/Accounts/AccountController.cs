@@ -88,14 +88,16 @@ namespace Mergen.Game.Api.API.Accounts
             if (account != null)
                 return BadRequest("invalid_email", "Email already exists");
 
-            account = new Account();
-            account.Email = inputModel.Email;
-            account.PasswordHash = PasswordHash.CreateHash(inputModel.Password);
-            account.StatusId = AccountStatusIds.Active;
-            account.Timezone = "Asia/Tehran";
-            account.ReceiveNotifications = true;
-            account.SearchableByEmailAddressOrUsername = true;
-            account.FriendsOnlyBattleInvitations = false;
+            account = new Account
+            {
+                Email = inputModel.Email,
+                PasswordHash = PasswordHash.CreateHash(inputModel.Password),
+                StatusId = AccountStatusIds.Active,
+                Timezone = "Asia/Tehran",
+                ReceiveNotifications = true,
+                SearchableByEmailAddressOrUsername = true,
+                FriendsOnlyBattleInvitations = false
+            };
             account.Nickname = account.Email.Substring(0, account.Email.IndexOf('@'));
             account.RegisterDateTime = DateTime.UtcNow;
             account.GenderId = GenderIds.Male;
@@ -199,6 +201,7 @@ namespace Mergen.Game.Api.API.Accounts
                 await _accountManager.SaveAsync(account, cancellationToken);
             }
         }
+
 
         [HttpPut]
         [Route("accounts/{accountId}/avatar")]
@@ -560,9 +563,6 @@ namespace Mergen.Game.Api.API.Accounts
             CancellationToken cancellationToken)
         {
             var accId = int.Parse(accountId);
-
-            if (AccountId != accId)
-                return Forbidden();
 
             var account = await _accountManager.GetAsync(accId, cancellationToken);
             if (account == null)

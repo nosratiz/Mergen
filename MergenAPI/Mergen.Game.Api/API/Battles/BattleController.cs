@@ -196,10 +196,10 @@ namespace Mergen.Game.Api.API.Battles
                 return NotFound();
 
             if (game.CurrentTurnPlayerId != AccountId)
-                return BadRequest("invalid_player_turn");
+                return BadRequest("invalid_player_turn", "invalid player turn");
 
             if (game.SelectedCategoryId != null)
-                return BadRequest("already_selected");
+                return BadRequest("already_selected", "already selected");
 
             using (var trans = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
@@ -302,14 +302,17 @@ namespace Mergen.Game.Api.API.Battles
             .ThenInclude(q => q.QuestionCategories)
             .FirstOrDefaultAsync(q => q.Id == gameId, cancellationToken);
 
+                #region Game Validation
+
+
                 if (game == null)
                     return NotFound();
 
                 if (game.GameState == GameStateIds.Completed || game.GameState == GameStateIds.SelectCategory)
-                    return BadRequest("invalid_gameState","invalid_gameState");
+                    return BadRequest("invalid_gameState", "invalid_gameState");
 
                 if (game.CurrentTurnPlayerId != AccountId)
-                    return BadRequest("invalid_turn","invalid_turn");
+                    return BadRequest("invalid_turn", "invalid_turn");
 
                 var playerStat = await _dataContext.AccountStatsSummaries.FirstOrDefaultAsync(q => q.AccountId == game.CurrentTurnPlayerId, cancellationToken);
                 if (playerStat == null)
@@ -323,7 +326,10 @@ namespace Mergen.Game.Api.API.Battles
                 }
 
                 if (inputModel.Answers.Count() != game.GameQuestions.Count)
-                    return BadRequest("invalid_answersCount","invalid_answersCount");
+                    return BadRequest("invalid_answersCount", "invalid_answersCount");
+
+                #endregion
+
 
                 var changedCategoryStats = new List<AccountCategoryStat>();
 
@@ -343,6 +349,7 @@ namespace Mergen.Game.Api.API.Battles
 
                         gq.Player1SelectedAnswer = selectedAnswer;
                     }
+
                     else
                     {
                         if (gq.Player2SelectedAnswer.HasValue)
@@ -471,6 +478,10 @@ namespace Mergen.Game.Api.API.Battles
                         .Include(q => q.Player2)
                         .FirstOrDefaultAsync(q => q.Id == gameBattleId, cancellationToken);
 
+                    if (battle.Games.Count !=6)
+                        battle.Round += 1;      
+                    
+                  
 
                     if (battle.Games.Count == 6 && battle.Games.All(q => q.GameState == GameStateIds.Completed))
                     {
@@ -586,6 +597,7 @@ namespace Mergen.Game.Api.API.Battles
                         player1Stats.Sky = await CalculatePlayerSkyAsync(battle.Player1Id, cancellationToken);
                         player2Stats.Sky = await CalculatePlayerSkyAsync(battle.Player2Id.Value, cancellationToken);
                     }
+
                     else
                     {
                         var nextPlayer = game.CurrentTurnPlayerId == battle.Player1Id ? battle.Player1 : battle.Player2;

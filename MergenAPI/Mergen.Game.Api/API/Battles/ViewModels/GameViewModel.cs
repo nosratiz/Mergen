@@ -14,11 +14,15 @@ namespace Mergen.Game.Api.API.Battles.ViewModels
         public long CurrentTurnPlayerId { get; set; }
         public GameStateIds GameState { get; set; }
 
+        public long? SelectedCategoryId { get; set; }
+
         public static GameViewModel Map(Core.Entities.Game game)
         {
             var vm = Mapper.Map<GameViewModel>(game);
 
             vm.AvailableCategories = game.GameCategories.Select(q => CategoryViewModel.Map(q.Category));
+
+            vm.SelectedCategoryId = game.SelectedCategoryId;
 
             vm.Questions = game.GameQuestions.Where(q => q.Question != null).Select(q =>
             {

@@ -25,7 +25,6 @@ namespace Mergen.Game.Api.API.Battles
             List<PlayerCorrectAnswer> playerCorrectAnswers = new List<PlayerCorrectAnswer>();
 
             foreach (var answer in battle.Games)
-            {
                 playerCorrectAnswers.Add(new PlayerCorrectAnswer
                 {
                     GameId = answer.Id,
@@ -33,7 +32,7 @@ namespace Mergen.Game.Api.API.Battles
                     Player2CorrectAnswer = answer.GameQuestions.Sum(q => q.Player2SelectedAnswer == q.Question.CorrectAnswerNumber ? 1 : 0)
 
                 });
-            }
+
 
             vm.PlayerCorrectAnswers = playerCorrectAnswers;
 
@@ -47,7 +46,6 @@ namespace Mergen.Game.Api.API.Battles
             if (lastgame != null)
             {
                 vm.CurrentTurnPlayerId = lastgame.CurrentTurnPlayerId;
-
 
                 vm.ShouldAnswer =
                     ((vm.CurrentTurnPlayerId == vm.Player1Id &&
