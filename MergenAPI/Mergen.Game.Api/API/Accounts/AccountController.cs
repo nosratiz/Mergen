@@ -186,6 +186,15 @@ namespace Mergen.Game.Api.API.Accounts
                 foreach (var item in defaultAvatarItems)
                     avatars.Add(new Avatar { Id = item.Id, AvatarCategoryId = item.AvatarCategoryId.Value });
 
+
+                avatars.Add(new Avatar { Id = 0, AvatarCategoryId = 500 });
+                avatars.Add(new Avatar { Id = 0, AvatarCategoryId = 800 });
+                avatars.Add(new Avatar { Id = 0, AvatarCategoryId = 900 });
+                avatars.Add(new Avatar { Id = 0, AvatarCategoryId = 1200 });
+                avatars.Add(new Avatar { Id = 0, AvatarCategoryId = 1300 });
+                avatars.Add(new Avatar { Id = 0, AvatarCategoryId = 1400 });
+
+
                 account.AvatarItemIds = JsonConvert.SerializeObject(avatars);
                 await _accountManager.SaveAsync(account, cancellationToken);
             }
